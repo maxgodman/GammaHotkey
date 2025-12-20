@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="GammaHotkey.vcxproj" Id="33259f22-9daa-4044-b536-9ef7c3060926" />
+</Solution>

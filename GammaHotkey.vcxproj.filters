@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="external\imgui\imgui.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_draw.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_tables.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_widgets.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>external\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\backends\imgui_impl_win32.cpp">
+      <Filter>external\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\AppGlobals.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\ConfigManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\DisplayManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\HotkeyManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\IconManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\ImGui_Integration.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\PathUtils.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\ProfileManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\StartupManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\StringUtils.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\SystemTrayManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UI_Advanced.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UI_Dialogs.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UI_Main.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UI_Shared.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UI_Simple.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\AppState.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\UIGlobals.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\UIState.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\GammaManager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\framework.h" />
+    <ClInclude Include="src\targetver.h" />
+    <ClInclude Include="resources\Resource.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\AppGlobals.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\ConfigManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\DisplayManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\GammaHotkeyTypes.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\HotkeyManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\IconManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\ImGui_Integration.h">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\PathUtils.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\ProfileManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\StartupManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\StringUtils.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\SystemTrayManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\UI_Shared.h">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\AppState.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\UIState.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\UIGlobals.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\managers\GammaManager.h">
+      <Filter>src\managers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\icons\GammaHotkey.ico">
+      <Filter>resources\icons</Filter>
+    </Image>
+    <Image Include="resources\icons\on.ico">
+      <Filter>resources\icons</Filter>
+    </Image>
+    <Image Include="resources\icons\off.ico">
+      <Filter>resources\icons</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{73485a7a-580a-4d18-8e87-3275631644ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core">
+      <UniqueIdentifier>{a3aa6fb5-d61f-4fcb-b480-23e92d655438}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{52c4cdb0-6f69-4747-8628-d17a1ed79f23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\imgui">
+      <UniqueIdentifier>{91e80d49-a726-4c96-9648-5792c44140ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\imgui\backends">
+      <UniqueIdentifier>{cf364dec-b82b-4436-b46d-143136cec0d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{89741468-68ef-4917-8c2d-8bda26c78765}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\icons">
+      <UniqueIdentifier>{4c13a60d-aa80-4c56-b08f-be840edc4f11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\managers">
+      <UniqueIdentifier>{d932dd81-1588-4938-95a1-177864db5e6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui">
+      <UniqueIdentifier>{d0f24cdc-030d-48a3-b41b-c5450adac432}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utils">
+      <UniqueIdentifier>{2c8eb41b-1a1f-457c-8ccd-f347cc7f784f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\GammaHotkey.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
