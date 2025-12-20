@@ -56,8 +56,7 @@ Use 2 hotkeys to cycle through as many adjustments as you like!
 ### 🖥️ Multi-Monitor Support
 
 - **Targets a specific display** - select the display to apply gamma changes to.
-- It is possible to run multiple instances of the app targeting different displays to manage gamma for multiple displays.<br>
-To do this, duplicate the executable and give it a unique name, you can then run two instances of the application, each with their own configs.
+- It is possible to run multiple instances of the app targeting different displays to manage gamma for multiple displays. To do this, duplicate the executable and give it a unique name, you can then run two unique instances of the application, each with their own configs.
 
 ### ⚠️ Screen Capture Unaffected
 
