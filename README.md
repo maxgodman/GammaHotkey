@@ -3,7 +3,7 @@
 **Apply display gamma changes using hotkeys, for Windows**
 
 GammaHotkey is a lightweight portable application that allows you to adjust your display's brightness, contrast, and gamma using hotkeys.<br>
-Built as a clean modern solution to this problem, with functionality not found in alternative applications.
+Built as a clean modern solution, with functionality not found in alternative applications.
 
 ![Version](https://img.shields.io/badge/version-0.1-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
