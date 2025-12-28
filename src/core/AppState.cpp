@@ -2,6 +2,11 @@
 
 #include "AppState.h"
 
+void AppState::SetConfigInitialized(const bool initialized)
+{
+	m_configInitialized = initialized;
+}
+
 void AppState::SetGammaEnabled(const bool enabled)
 {
 	m_gammaEnabled = enabled;

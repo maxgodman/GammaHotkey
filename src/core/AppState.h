@@ -8,6 +8,18 @@ class AppState
 {
 public:
     /**
+     * @brief Set config initialized state.
+     * @param initialized true = initialized.
+     */
+    void SetConfigInitialized(const bool initialized);
+
+    /**
+     * @brief Gets the config initialized state.
+     * @return true = config is initialized.
+     */
+    bool IsConfigInitialized() const { return m_configInitialized; }
+
+    /**
      * @brief Set gamma enabled state, and dispatch updates required to reflect this change, e.g. update icons.
      * @param enabled true = on, false = off.
      */
@@ -32,6 +44,7 @@ public:
     bool IsAdvancedModeEnabled() const { return m_advancedModeEnabled; }
 
 private:
+    bool m_configInitialized = false;
     bool m_gammaEnabled = false;
     bool m_advancedModeEnabled = false; // Default to Simple mode.
 };

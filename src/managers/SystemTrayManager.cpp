@@ -19,9 +19,9 @@ namespace SystemTrayManager
         memset(&g_nid, 0, sizeof(g_nid));
         g_nid.cbSize = sizeof(NOTIFYICONDATA);
         g_nid.hWnd = hwnd;
-        g_nid.uID = TrayIDs::ICON_ID;
+        g_nid.uID = SystemTrayIDs::ID_ICON;
         g_nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-        g_nid.uCallbackMessage = TrayIDs::WM_TRAYICON;
+        g_nid.uCallbackMessage = SystemTrayIDs::WM_ICON;
         g_nid.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_GAMMAHOTKEY));
         wcscpy_s(g_nid.szTip, L"GammaHotkey");
         Shell_NotifyIcon(NIM_ADD, &g_nid);
@@ -79,13 +79,13 @@ namespace SystemTrayManager
             toggleText += L" (" + hotkeyName + L")";
         }
         
-        AppendMenu(hMenu, MF_STRING, TrayIDs::ID_TRAY_TOGGLE, toggleText.c_str());
+        AppendMenu(hMenu, MF_STRING, SystemTrayIDs::ID_TOGGLE, toggleText.c_str());
         
         AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
         
-        AppendMenu(hMenu, MF_STRING, TrayIDs::ID_TRAY_SHOW, L"Show");
+        AppendMenu(hMenu, MF_STRING, SystemTrayIDs::ID_SHOW, L"Show");
         AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-        AppendMenu(hMenu, MF_STRING, TrayIDs::ID_TRAY_EXIT, L"Exit");
+        AppendMenu(hMenu, MF_STRING, SystemTrayIDs::ID_EXIT, L"Exit");
         
         SetForegroundWindow(hwnd);
         TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, hwnd, NULL);

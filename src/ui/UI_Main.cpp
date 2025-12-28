@@ -2,7 +2,6 @@
 
 // Coordinates rendering the UI, for both Simple and Advanced UI modes.
 
-#include "framework.h"
 #include "AppGlobals.h"
 #include "UIGlobals.h"
 #include "ConfigManager.h"
@@ -24,18 +23,9 @@ void RenderMainUI()
         App::state.SetAdvancedModeEnabled(UI::state.targetAdvancedMode);
         ConfigManager::Save();
         
-        // Resize window.
-        const int newWidth = App::state.IsAdvancedModeEnabled() ? 900 : 420;
-        const int newHeight = App::state.IsAdvancedModeEnabled() ? 600 : 520;
-        
-        RECT currentRect;
-        GetWindowRect(App::mainWindow, &currentRect);
-        SetWindowPos(App::mainWindow, nullptr, 
-                    currentRect.left, currentRect.top, 
-                    newWidth, newHeight,
-                    SWP_NOZORDER | SWP_NOACTIVATE);
-        
         UI::state.modeJustChanged = false;
+
+        App::SyncWindowSizeToState();
         
         // Skip popup rendering this frame, ImGui state is in transition.
         if (App::state.IsAdvancedModeEnabled())

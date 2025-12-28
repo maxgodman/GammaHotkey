@@ -6,11 +6,6 @@
 
 #include "GammaHotkeyTypes.h"
 
-namespace UIConstants
-{
-    constexpr float TITLEBAR_HEIGHT = 32.0f;
-}
-
 /**
  * @brief Renders the Display selection combo box.
  */

@@ -9,7 +9,7 @@ namespace ConfigManager
     /**
      * @brief Load configuration from ini file.
      * 
-     * Loads profiles, hotkeys, and settings into App:: namespace.
+     * Loads profiles, hotkeys, and settings, primarily into AppGlobals and AppState.
      * 
      * @return true if the configuration was loaded successfully.
      */

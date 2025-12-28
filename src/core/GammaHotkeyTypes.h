@@ -40,13 +40,27 @@ namespace HotkeyIDs
     constexpr int PROFILE_BASE = 1000;
 }
 
-namespace TrayIDs
+namespace SystemTrayIDs
 {
-    constexpr UINT WM_TRAYICON = WM_USER + 100;
-    constexpr UINT ID_TRAY_SHOW = 2100;
-    constexpr UINT ID_TRAY_EXIT = 2101;
-    constexpr UINT ID_TRAY_TOGGLE = 2102;
-    constexpr UINT ICON_ID = 1;
+    constexpr UINT ID_ICON = 1;
+    constexpr UINT WM_ICON = WM_USER + 100;
+    constexpr UINT ID_TOGGLE = 2100;
+    constexpr UINT ID_SHOW = 2101;
+    constexpr UINT ID_EXIT = 2102;
+}
+
+namespace AppConstants
+{
+    // @TODO: Update these, 16:10 aspect ratio for advanced mode?
+    constexpr int DEFAULT_SIMPLE_WINDOWSIZE_X = 420;
+    constexpr int DEFAULT_SIMPLE_WINDOWSIZE_Y = 520;
+    constexpr int DEFAULT_ADVANCED_WINDOWSIZE_X = 900;
+    constexpr int DEFAULT_ADVANCED_WINDOWSIZE_Y = 600;
+}
+
+namespace UIConstants
+{
+    constexpr float TITLEBAR_HEIGHT = 32.0f;
 }
 
 namespace GammaConstants

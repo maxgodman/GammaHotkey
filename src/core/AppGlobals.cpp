@@ -2,6 +2,7 @@
 
 #include "AppGlobals.h"
 #include "GammaManager.h"
+#include <cassert>
 
 namespace App
 {
@@ -53,6 +54,28 @@ namespace App
         {
             GammaManager::ResetDisplay(selectedDisplayIndex);
         }
+    }
+
+    int GetDesiredWindowSizeX()
+    {
+        return App::state.IsAdvancedModeEnabled() ? AppConstants::DEFAULT_ADVANCED_WINDOWSIZE_X : AppConstants::DEFAULT_SIMPLE_WINDOWSIZE_X;
+    }
+
+    int GetDesiredWindowSizeY()
+    {
+        return App::state.IsAdvancedModeEnabled() ? AppConstants::DEFAULT_ADVANCED_WINDOWSIZE_Y : AppConstants::DEFAULT_SIMPLE_WINDOWSIZE_Y;
+    }
+
+    void SyncWindowSizeToState()
+    {
+        assert(App::mainWindow); // Main window must be created and ready.
+
+        const int windowWidth = App::GetDesiredWindowSizeX();
+        const int windowHeight = App::GetDesiredWindowSizeY();
+
+        SetWindowPos(App::mainWindow, nullptr, 0, 0,
+            windowWidth, windowHeight,
+            SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
     bool HasSelectedProfile()

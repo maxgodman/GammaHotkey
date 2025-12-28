@@ -59,6 +59,21 @@ namespace App
     void SyncGammaToState();
 
     /**
+     * @brief Gets the desired window size X (width) of the app.
+     */
+    int GetDesiredWindowSizeX();
+
+    /**
+     * @brief Gets the desired window size Y (height) of the app.
+     */
+    int GetDesiredWindowSizeY();
+
+    /**
+     * @brief Syncs the window size to the current state of the app.
+     */
+    void SyncWindowSizeToState();
+
+    /**
      * @brief Checks if we have a selected profile, effectively validating selectedProfileIndex against the profiles vector.
      * @return true if selectedProfileIndex can be used to obtain a profile from profiles vector.
      */

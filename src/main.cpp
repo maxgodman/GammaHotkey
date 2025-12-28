@@ -51,7 +51,6 @@
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool EnforceSingleInstance();
 ATOM RegisterMainWindowClass(const HINSTANCE hInstance);
-BOOL InitInstance(const HINSTANCE hInstance, const int nCmdShow);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void ShowMainWindow(const HWND hWnd);
 void HideMainWindow(const HWND hWnd);
@@ -83,11 +82,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     LoadStringW(hInstance, IDC_GAMMAHOTKEY, szWindowClass, GammaConstants::MAX_LOADSTRING);
     RegisterMainWindowClass(hInstance);
 
-    if (!InitInstance(hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
+    hInst = hInstance;
 
+    const HWND hWnd = CreateWindowW(szWindowClass, szTitle,
+        WS_POPUP | WS_THICKFRAME,  // Borderless but resizable.
+        CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, // Created with zero window size, updated to desired size later.
+        nullptr, nullptr, hInstance, nullptr);
+
+    if (!hWnd) return FALSE;
+    
     const HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GAMMAHOTKEY));
 
     MSG msg;
@@ -189,28 +192,6 @@ ATOM RegisterMainWindowClass(const HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-BOOL InitInstance(const HINSTANCE hInstance, const int nCmdShow)
-{
-    hInst = hInstance;
-
-    // Determine initial window size based on mode (loaded from config).
-    const int windowWidth = App::state.IsAdvancedModeEnabled() ? 900 : 420; // @TODO: Update these, 16:10 aspect ratio for advanced mode?
-    const int windowHeight = App::state.IsAdvancedModeEnabled() ? 600 : 520;
-
-    const HWND hWnd = CreateWindowW(szWindowClass, szTitle,
-        WS_POPUP | WS_THICKFRAME,  // Borderless but resizable.
-        CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight,
-        nullptr, nullptr, hInstance, nullptr);
-
-    if (!hWnd)
-    {
-        return FALSE;
-    }
-
-    App::mainWindow = hWnd;
-    return TRUE;
-}
-
 void ShowMainWindow(const HWND hWnd)
 {
     ShowWindow(hWnd, SW_SHOW);
@@ -254,8 +235,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_CREATE:
+    case WM_CREATE: // @TODO: Review what belongs here, and what should be shifted elsewhere.
     {
+        if (!hWnd) return -1;
+
+        // We currently only ever expect one window to be created, so we assume this is the main window.
+        App::mainWindow = hWnd;
+
         // Initialize ImGui renderer for the UI.
         g_ImGuiRenderer = new ImGuiRenderer();
         if (!g_ImGuiRenderer->Initialize(hWnd))
@@ -278,16 +264,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         // Load config and register hotkeys.
         ConfigManager::Load();
+        App::state.SetConfigInitialized(true); // Mark initialized, so we can check if config data is ready.
         HotkeyManager::RegisterAll(hWnd);
         
-        // Resize window to match loaded mode.
-        // Window was created with default size before config was loaded.
-        // @TODO:   Window always starts with these fixed sizes at position 0,0. It would be nice to improve this.
-        //          Store sizes and positions in config? Start in center of screen?
-        const int windowWidth = App::state.IsAdvancedModeEnabled() ? 900 : 420;
-        const int windowHeight = App::state.IsAdvancedModeEnabled() ? 600 : 520;
-        SetWindowPos(hWnd, nullptr, 0, 0, windowWidth, windowHeight, 
-                    SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        // Window was created with zero size, now update it.
+        App::SyncWindowSizeToState();
         
         // Validate selected monitor index, required after config load.
         if (App::selectedDisplayIndex < 0 || App::selectedDisplayIndex >= (int)App::displays.size())
@@ -434,15 +415,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int wmId = LOWORD(wParam);
         switch (wmId)
         {
-        case TrayIDs::ID_TRAY_SHOW:
+        case SystemTrayIDs::ID_SHOW:
             ShowMainWindow(hWnd);
             return 0;
-        case TrayIDs::ID_TRAY_TOGGLE:
+        case SystemTrayIDs::ID_TOGGLE:
             // Toggle gamma on/off, handle it the same as the toggle hotkey.
             // @TODO: This is a bit of a hack, can we handle this better?
             HotkeyManager::HandleHotkey(HotkeyIDs::TOGGLE);
             return 0;
-        case TrayIDs::ID_TRAY_EXIT:
+        case SystemTrayIDs::ID_EXIT:
             DestroyWindow(hWnd);
             return 0;
         }
@@ -484,7 +465,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // Return MNC_CLOSE to prevent beep sound.
         return MAKELRESULT(0, MNC_CLOSE);
 
-    case TrayIDs::WM_TRAYICON:
+    case SystemTrayIDs::WM_ICON:
         if (lParam == WM_LBUTTONDOWN)
         {
             ShowMainWindow(hWnd);
