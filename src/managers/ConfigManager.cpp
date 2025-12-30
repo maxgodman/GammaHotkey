@@ -45,8 +45,8 @@ namespace ConfigManager
         
         // Global settings.
         static constexpr const wchar_t* TOGGLE_HOTKEY = L"ToggleHotkey";
-        static constexpr const wchar_t* NEXT_HOTKEY = L"NextHotkey";
-        static constexpr const wchar_t* PREVIOUS_HOTKEY = L"PreviousHotkey";
+        static constexpr const wchar_t* NEXTPROFILE_HOTKEY = L"NextProfileHotkey";
+        static constexpr const wchar_t* PREVIOUSPROFILE_HOTKEY = L"PreviousProfileHotkey";
         static constexpr const wchar_t* LOOP_PROFILES = L"LoopProfiles";
         static constexpr const wchar_t* START_MINIMIZED = L"StartMinimized";
         static constexpr const wchar_t* MINIMIZE_TO_TRAY = L"MinimizeToTray";
@@ -226,8 +226,8 @@ namespace ConfigManager
                 // Static handler map with case-insensitive comparator.
                 static const std::map<std::wstring, HandlerFunc, CaseInsensitiveCompare> handlers = {
                     {Keys::TOGGLE_HOTKEY, [](const std::wstring& v) { App::toggleHotkey = static_cast<UINT>(ParseInt(v, 0)); }},
-                    {Keys::NEXT_HOTKEY, [](const std::wstring& v) { App::nextProfileHotkey = static_cast<UINT>(ParseInt(v, 0)); }},
-                    {Keys::PREVIOUS_HOTKEY, [](const std::wstring& v) { App::previousProfileHotkey = static_cast<UINT>(ParseInt(v, 0)); }},
+                    {Keys::NEXTPROFILE_HOTKEY, [](const std::wstring& v) { App::nextProfileHotkey = static_cast<UINT>(ParseInt(v, 0)); }},
+                    {Keys::PREVIOUSPROFILE_HOTKEY, [](const std::wstring& v) { App::previousProfileHotkey = static_cast<UINT>(ParseInt(v, 0)); }},
                     {Keys::LOOP_PROFILES, [](const std::wstring& v) { App::loopProfiles = (ParseInt(v, 0) != 0); }},
                     {Keys::START_MINIMIZED, [](const std::wstring& v) { App::startMinimized = (ParseInt(v, 0) != 0); }},
                     {Keys::MINIMIZE_TO_TRAY, [](const std::wstring& v) { App::minimizeToTray = (ParseInt(v, 0) != 0); }},
@@ -330,8 +330,8 @@ namespace ConfigManager
         // Save global hotkeys and settings.
         ofs << L"[" << Keys::SECTION_GLOBALHOTKEYS << L"]\n";
         ofs << Keys::TOGGLE_HOTKEY << L"=" << App::toggleHotkey << L"\n";
-        ofs << Keys::NEXT_HOTKEY << L"=" << App::nextProfileHotkey << L"\n";
-        ofs << Keys::PREVIOUS_HOTKEY << L"=" << App::previousProfileHotkey << L"\n";
+        ofs << Keys::NEXTPROFILE_HOTKEY << L"=" << App::nextProfileHotkey << L"\n";
+        ofs << Keys::PREVIOUSPROFILE_HOTKEY << L"=" << App::previousProfileHotkey << L"\n";
         ofs << Keys::LOOP_PROFILES << L"=" << (App::loopProfiles ? 1 : 0) << L"\n";
         ofs << Keys::START_MINIMIZED << L"=" << (App::startMinimized ? 1 : 0) << L"\n";
         ofs << Keys::MINIMIZE_TO_TRAY << L"=" << (App::minimizeToTray ? 1 : 0) << L"\n";

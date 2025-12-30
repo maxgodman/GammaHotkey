@@ -424,7 +424,7 @@ void RenderAdvancedUI()
             }
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(UIConstants::CHECKBOX_INNERSPACING, ImGui::GetStyle().ItemInnerSpacing.y));
-            ImGui::Checkbox("Wrap around profile list", &App::loopProfiles);
+            ImGui::Checkbox("Loop profile list", &App::loopProfiles);
             ImGui::PopStyleVar();
             if (ImGui::IsItemHovered())
             {
