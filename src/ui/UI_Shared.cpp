@@ -142,6 +142,7 @@ void RenderDisplayComboBox()
 
 void RenderOptionsCheckboxes()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(UIConstants::CHECKBOX_INNERSPACING, ImGui::GetStyle().ItemInnerSpacing.y));
     if (ImGui::Checkbox("Run in background when closed", &App::minimizeToTray))
     {
         ConfigManager::Save();
@@ -178,6 +179,7 @@ void RenderOptionsCheckboxes()
     {
         ImGui::SetTooltip("Automatically start GammaHotkey when Windows starts");
     }
+    ImGui::PopStyleVar();
 }
 
 // @TODO: These three sliders are mostly duplicate code. Consolidate?

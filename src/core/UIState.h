@@ -25,6 +25,7 @@ public:
 
     int deleteProfileIndex = -1;
     int renamingProfileIndex = -1;
+    bool renameNeedsFocus = false;
 
     int capturingHotkeyType = -1; // @TODO: Find all usage of this and handle this better, it is hardcoded and fragile.
     bool hotkeySuspended = false;

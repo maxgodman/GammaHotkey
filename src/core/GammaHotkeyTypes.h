@@ -13,10 +13,10 @@
 struct Profile
 {
     std::wstring name;
-    int brightness = 0;      // Range: -50 to 50
-    float contrast = 1.0f;   // Range: 0.5 to 1.5
-    float gamma = 1.0f;      // Range: 0.1 to 3.0
-    UINT hotkey = 0;         // Virtual key code, 0 = none.
+    int brightness = 0;     // Range: -50 to 50
+    float contrast = 1.0f;  // Range: 0.5 to 1.5
+    float gamma = 1.0f;     // Range: 0.1 to 3.0
+    UINT hotkey = 0;        // Virtual key code, 0 = none.
     
     Profile() = default;
     Profile(std::wstring n, int b, float c, float g, UINT h)
@@ -28,8 +28,8 @@ struct Profile
  */
 struct DisplayEntry
 {
-    std::wstring deviceName;   // Internal device name (e.g. "\\\\.\\DISPLAY1").
-    std::wstring friendlyName; // User friendly name (e.g. "Branded Monitor | Branded GPU").
+    std::wstring deviceName;    // Internal device name (e.g. "\\\\.\\DISPLAY1").
+    std::wstring friendlyName;  // User friendly name (e.g. "Branded Monitor | Branded GPU").
 };
 
 namespace HotkeyIDs
@@ -51,21 +51,23 @@ namespace SystemTrayIDs
 
 namespace AppConstants
 {
-    // @TODO: Update these, 16:10 aspect ratio for advanced mode?
-    constexpr int DEFAULT_SIMPLE_WINDOWSIZE_X = 420;
+    constexpr int MAX_LOADSTRING = 100;
+    constexpr int DEFAULT_SIMPLE_WINDOWSIZE_X = 450;
     constexpr int DEFAULT_SIMPLE_WINDOWSIZE_Y = 520;
     constexpr int DEFAULT_ADVANCED_WINDOWSIZE_X = 900;
-    constexpr int DEFAULT_ADVANCED_WINDOWSIZE_Y = 600;
+    constexpr int DEFAULT_ADVANCED_WINDOWSIZE_Y = 660;
 }
 
 namespace UIConstants
 {
     constexpr float TITLEBAR_HEIGHT = 32.0f;
+    constexpr float CONTENT_PADDING_X = 12.0f;
+    constexpr float CONTENT_PADDING_Y = 12.0f;
+    constexpr float CHECKBOX_INNERSPACING = 8.0f;
 }
 
 namespace GammaConstants
 {
-    constexpr int RAMP_SIZE = 256;        // Gamma ramp has 256 entries (8-bit).
-    constexpr int RAMP_MAX = 65535;       // Each entry is 16-bit (0-65535).
-    constexpr int MAX_LOADSTRING = 100;
+    constexpr int RAMP_SIZE = 256;  // Gamma ramp has 256 entries (8-bit).
+    constexpr int RAMP_MAX = 65535; // Each entry is 16-bit (0-65535).
 }

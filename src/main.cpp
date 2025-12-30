@@ -58,8 +58,8 @@ bool RenderImGuiFrame();
 
 // Global instance variables.
 HINSTANCE hInst;
-WCHAR szTitle[GammaConstants::MAX_LOADSTRING];
-WCHAR szWindowClass[GammaConstants::MAX_LOADSTRING];
+WCHAR szTitle[AppConstants::MAX_LOADSTRING];
+WCHAR szWindowClass[AppConstants::MAX_LOADSTRING];
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -78,8 +78,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // V2 specifically enables WM_DPICHANGED messages for dynamic rescaling during window moves.
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, GammaConstants::MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_GAMMAHOTKEY, szWindowClass, GammaConstants::MAX_LOADSTRING);
+    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, AppConstants::MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_GAMMAHOTKEY, szWindowClass, AppConstants::MAX_LOADSTRING);
     RegisterMainWindowClass(hInstance);
 
     hInst = hInstance;
