@@ -28,18 +28,18 @@ Use 2 hotkeys to cycle through as many adjustments as you like!
 
 ## ✨ Features
 
-### 🪶 Lightweight Portable Application
+### Lightweight Portable Application
 
 - **No installation** - just a small portable executable.
 - Config file is stored next to the executable, with matching name. e.g. GammaHotkey.ini
 - Make sure the config stays alongside the executable, if you rename the .exe, rename the .ini to match!
 
-### 🎯 Simple and Advanced Modes
+### Simple and Advanced Modes
 
 - **Simple mode** - Quick access to a single set of controls and options, with a toggle on/off hotkey.
 - **Advanced mode** - Manage gamma using profiles, bind keys to profiles, cycle through profiles sequentially, and more!
 
-### ⚡ Hotkeys
+### Hotkeys
 
 - **Toggle On/Off** - Enable/disable the current gamma adjustments.
 - **Next/Previous Profile** - Cycle through all profiles using one or two keys.
@@ -47,18 +47,18 @@ Use 2 hotkeys to cycle through as many adjustments as you like!
 - Hotkey binding supports any key!
 
 
-### 💾 Profile Management (Advanced Mode)
+### Profile Management (Advanced Mode)
 
 - Create unlimited profiles, storing unique brightness, contrast, and gamma settings.
 - Assign hotkeys to profiles for instant switching.
 - Edit, delete, and re-order profiles easily.
 
-### 🖥️ Multi-Monitor Support
+### Multi-Monitor Support
 
 - **Targets a specific display** - select the display to apply gamma changes to.
 - It is possible to run multiple instances of the app targeting different displays to manage gamma for multiple displays. To do this, duplicate the executable and give it a unique name, you can then run two unique instances of the application, each with their own configs.
 
-### ⚠️ Screen Capture Unaffected
+### Screen Capture Unaffected
 
 - GammaHotkey applies gamma adjustments directly to your display using Windows display APIs.
 - **What you see** - the display appears brighter/darker/adjusted.
@@ -146,13 +146,9 @@ Settings are stored in `{ExecutableName}.ini` in the same folder as the executab
 - **Right-click tray icon:** Select "Show" to restore the window, or left click on the icon.
 - **Check options:** There are options to "Run in background when closed" and "Run in background when launched".
 
----
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
-
----
 
 ## 📄 License
 
