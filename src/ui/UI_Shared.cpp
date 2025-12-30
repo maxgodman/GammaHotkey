@@ -5,6 +5,7 @@
 #include "framework.h"
 #include "UI_Shared.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "AppGlobals.h"
 #include "UIGlobals.h"
 #include "GammaManager.h"
@@ -516,7 +517,13 @@ void DrawGammaCurve()
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     const ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    const ImVec2 canvasSize = ImVec2(256, 150);
+    const float minCanvasWidth = 150.0f;
+    const float minCanvasHeight = 100.0f;
+
+    const ImVec2 canvasSize = ImVec2(
+        ImMax(ImGui::GetContentRegionAvail().x, minCanvasWidth),
+        ImMax(ImGui::GetContentRegionAvail().y, minCanvasHeight)
+    );
     
     // Background.
     drawList->AddRectFilled(canvasPos,
@@ -539,15 +546,16 @@ void DrawGammaCurve()
     
     // Draw curve.
     const ImU32 curveColor = App::gammaRampFailed ? IM_COL32(220, 53, 69, 255) : IM_COL32(13, 110, 253, 255);
+    const float curveThickness = 2.0f;
     
     for (int i = 0; i < 255; ++i)
     {
-        const float x0 = canvasPos.x + i;
+        const float x0 = canvasPos.x + (i / 255.0f) * canvasSize.x;
         const float y0 = canvasPos.y + canvasSize.y - (App::lastRamp[i] * canvasSize.y);
-        const float x1 = canvasPos.x + i + 1;
+        const float x1 = canvasPos.x + ((i + 1) / 255.0f) * canvasSize.x;
         const float y1 = canvasPos.y + canvasSize.y - (App::lastRamp[i + 1] * canvasSize.y);
         
-        drawList->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), curveColor, 2.0f);
+        drawList->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), curveColor, curveThickness);
     }
     
     ImGui::Dummy(canvasSize);
