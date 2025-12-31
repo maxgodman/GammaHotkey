@@ -291,11 +291,11 @@ void RenderAdvancedUI()
                             UI::state.renameNeedsFocus = false;
                         }
 
-                        bool commitRename = ImGui::InputText("##rename", UI::state.renameBuffer,
+                        const bool commitRename = ImGui::InputText("##rename", UI::state.renameBuffer,
                             sizeof(UI::state.renameBuffer), flags);
 
-                        bool cancelRename = ImGui::IsKeyPressed(ImGuiKey_Escape);
-                        bool lostFocus = !ImGui::IsItemFocused() && !UI::state.renameNeedsFocus;
+                        const bool cancelRename = ImGui::IsKeyPressed(ImGuiKey_Escape);
+                        const bool lostFocus = !ImGui::IsItemFocused() && !UI::state.renameNeedsFocus;
 
                         if (commitRename || (lostFocus && !cancelRename))
                         {
@@ -330,10 +330,20 @@ void RenderAdvancedUI()
                         const float itemHeight = ImGui::GetTextLineHeightWithSpacing();
                         const float fullWidth = ImGui::GetContentRegionAvail().x;
 
-                        // Draw selectable with reduced width to leave room for buttons.
-                        if (ImGui::Selectable(display.c_str(), selected, 0, ImVec2(fullWidth - 75, 0)))
+                        // Check if row is hovered before drawing anything.
+                        const ImVec2 rowMin = itemPos;
+                        const ImVec2 rowMax = ImVec2(itemPos.x + fullWidth, itemPos.y + itemHeight);
+                        const bool rowHovered = ImGui::IsMouseHoveringRect(rowMin, rowMax);
+
+                        // Draw selectable at full width, but use AllowOverlap so buttons can receive clicks.
+                        const ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_AllowOverlap;
+                        if (ImGui::Selectable(display.c_str(), selected, selectableFlags, ImVec2(0, 0)))
                         {
-                            SelectProfile(i);
+                            // Handle single click selection.
+                            if (!ImGui::IsMouseDoubleClicked(0))
+                            {
+                                SelectProfile(i);
+                            }
                         }
 
                         // Check for double-click to rename.
@@ -345,11 +355,7 @@ void RenderAdvancedUI()
                             UI::state.renameNeedsFocus = true;
                         }
 
-                        // Check if row is hovered for showing buttons.
-                        const ImVec2 rowMin = itemPos;
-                        const ImVec2 rowMax = ImVec2(itemPos.x + fullWidth, itemPos.y + itemHeight);
-                        const bool rowHovered = ImGui::IsMouseHoveringRect(rowMin, rowMax);
-
+                        // Draw overlay buttons when row is hovered.
                         if (rowHovered)
                         {
                             ImGui::SameLine(fullWidth - 70);
