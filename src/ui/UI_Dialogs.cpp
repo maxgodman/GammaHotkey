@@ -3,6 +3,7 @@
 // All popup/modal dialogs.
 
 #include "framework.h"
+#include "Resource.h"
 #include "imgui.h"
 #include "AppGlobals.h"
 #include "UIGlobals.h"
@@ -114,25 +115,24 @@ void RenderAboutDialog()
     // @TODO: Store the text content used here in resources?
     if (UI::state.showAboutDialog)
     {
-        ImGui::OpenPopup("About GammaHotkey");
+        ImGui::OpenPopup("About " VER_PRODUCTNAME);
         UI::state.showAboutDialog = false;
     }
     
-    if (ImGui::BeginPopupModal("About GammaHotkey", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::BeginPopupModal("About " VER_PRODUCTNAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::Text("GammaHotkey");
+        ImGui::Text("Version " VER_PRODUCTVERSION_STR);
         ImGui::Separator();
         ImGui::Spacing();
-        ImGui::Text("Gamma Hotkey");
-        ImGui::Text("Version 0.1");
-        ImGui::Spacing();
-        ImGui::Text("Adjust display brightness, contrast, and gamma");
-        ImGui::Text("with profiles and global hotkeys.");
-        ImGui::Spacing();
+        ImGui::Text(VER_FILEDESCRIPTION);
         ImGui::Separator();
+        ImGui::Spacing();
+        ImGui::Text(VER_LEGALCOPYRIGHT);
         ImGui::Spacing();
         
-        if (ImGui::Button("OK", ImVec2(120, 0)))
+        const float buttonWidth = 120.0f;
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - buttonWidth) * 0.5f);
+        if (ImGui::Button("OK", ImVec2(buttonWidth, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
