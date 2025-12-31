@@ -15,6 +15,25 @@
 #include <string>
 
 /**
+ * @brief Check if the specified window is maximized.
+ * @return true = window is maximized.
+ */
+static bool IsWindowMaximized(HWND hwnd)
+{
+    WINDOWPLACEMENT wp = { sizeof(wp) };
+    GetWindowPlacement(hwnd, &wp);
+    return wp.showCmd == SW_MAXIMIZE;
+}
+
+/**
+ * @brief Toggles maximize/restore for the specified window.
+ */
+static void ToggleMaximize(HWND hwnd)
+{
+    ShowWindow(hwnd, IsWindowMaximized(hwnd) ? SW_RESTORE : SW_MAXIMIZE);
+}
+
+/**
  * @brief Check if hotkey is already in use.
  * @param vk Virtual key to check.
  * @return Returns conflicting hotkey as friendly string, empty if no conflict.
@@ -342,6 +361,7 @@ void RenderTitleBar()
     const ImGuiIO& io = ImGui::GetIO();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     const ImVec2 windowPos = ImGui::GetWindowPos();
+    const bool maximized = IsWindowMaximized(App::mainWindow);
 
     // Title bar background.
     const ImVec2 titleBarMin = windowPos;
@@ -373,13 +393,9 @@ void RenderTitleBar()
     ImGui::SameLine(0, 0);
 
     // Maximize/Restore button.
-    WINDOWPLACEMENT wp = { sizeof(wp) };
-    GetWindowPlacement(App::mainWindow, &wp);
-    const bool isMaximized = (wp.showCmd == SW_MAXIMIZE);
-
-    if (ImGui::Button(isMaximized ? "[]##max" : "[]##max", ImVec2(buttonWidth, UIConstants::TITLEBAR_HEIGHT)))
+    if (ImGui::Button(maximized ? "[]##max" : "[]##max", ImVec2(buttonWidth, UIConstants::TITLEBAR_HEIGHT)))
     {
-        ShowWindow(App::mainWindow, isMaximized ? SW_RESTORE : SW_MAXIMIZE);
+        ToggleMaximize(App::mainWindow);
     }
     ImGui::SameLine(0, 0);
 
@@ -405,10 +421,16 @@ void RenderTitleBar()
     ImGui::SetCursorScreenPos(titleBarMin);
     ImGui::InvisibleButton("##titleDrag", ImVec2(draggableWidth, UIConstants::TITLEBAR_HEIGHT));
 
+    // Double-click to maximize/restore.
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+    {
+        ToggleMaximize(App::mainWindow);
+    }
+
     static bool dragging = false;
     static POINT dragOffset = { 0, 0 };
 
-    if (ImGui::IsItemActive())
+    if (!maximized && ImGui::IsItemActive())
     {
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
