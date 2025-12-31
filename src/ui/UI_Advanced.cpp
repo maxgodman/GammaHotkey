@@ -449,7 +449,7 @@ void RenderAdvancedUI()
             ImGui::Text("Gamma Curve Preview");
             ImGui::Separator();
 
-            if (App::gammaRampFailed)
+            if (App::state.gammaRampFailed)
             {
                 ImGui::TextColored(ImVec4(0.86f, 0.21f, 0.27f, 1.0f), "Warning: Values too extreme!");
             }

@@ -44,7 +44,7 @@ namespace GammaManager
             v = powf(v, 1.0f / gamma);
             
             // Cache for comparison (avoids reapplying identical ramps).
-            App::lastRamp[i] = v;
+            App::state.lastRamp[i] = v;
             
             // Convert to Windows gamma ramp format (16-bit integer, 0-65535).
             const WORD val = (WORD)(v * GammaConstants::RAMP_MAX + 0.5f);
@@ -72,7 +72,7 @@ namespace GammaManager
         BuildGammaRamp(profile, ramp);
 
         const BOOL success = SetDeviceGammaRamp(hdc, ramp);
-        App::gammaRampFailed = !success;
+        App::state.gammaRampFailed = !success;
         DeleteDC(hdc);
     }
     

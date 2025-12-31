@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "GammaHotkeyTypes.h"
+
 class AppState
 {
 public:
@@ -42,6 +44,9 @@ public:
      * @return true = advanced mode is enabled, false = simple mode is enabled.
      */
     bool IsAdvancedModeEnabled() const { return m_advancedModeEnabled; }
+
+    bool gammaRampFailed = false;
+    float lastRamp[GammaConstants::RAMP_SIZE] = {};
 
 private:
     bool m_configInitialized = false;

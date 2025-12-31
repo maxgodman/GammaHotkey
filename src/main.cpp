@@ -278,7 +278,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // @TODO:   We could use GetDeviceGammaRamp() to populate this, allowing us to update the graph with the current ramp.
         //          If the user has a gamma ramp set already for whatever reason this could be helpful, for now this is unnecessary.
         for (int i = 0; i < GammaConstants::RAMP_SIZE; ++i)
-            App::lastRamp[i] = i / 255.0f;
+            App::state.lastRamp[i] = i / 255.0f;
 
         // Add system tray icon, do this early enough to later receive an update as part of initialization.
         SystemTrayManager::AddIcon(hWnd);

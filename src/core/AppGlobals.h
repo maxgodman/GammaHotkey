@@ -40,12 +40,7 @@ namespace App
     
     // Simple mode profile.
     extern Profile simpleProfile;
-    
-    // Runtime state.
-    // @TODO: Move to AppState?
-    extern bool gammaRampFailed;
-    extern float lastRamp[GammaConstants::RAMP_SIZE];
-    
+        
     /**
      * @brief Syncs the gamma to the current state of the app.
      * 

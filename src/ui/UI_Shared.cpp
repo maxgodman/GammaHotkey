@@ -545,15 +545,15 @@ void DrawGammaCurve()
     }
     
     // Draw curve.
-    const ImU32 curveColor = App::gammaRampFailed ? IM_COL32(220, 53, 69, 255) : IM_COL32(13, 110, 253, 255);
+    const ImU32 curveColor = App::state.gammaRampFailed ? IM_COL32(220, 53, 69, 255) : IM_COL32(13, 110, 253, 255);
     const float curveThickness = 2.0f;
     
     for (int i = 0; i < 255; ++i)
     {
         const float x0 = canvasPos.x + (i / 255.0f) * canvasSize.x;
-        const float y0 = canvasPos.y + canvasSize.y - (App::lastRamp[i] * canvasSize.y);
+        const float y0 = canvasPos.y + canvasSize.y - (App::state.lastRamp[i] * canvasSize.y);
         const float x1 = canvasPos.x + ((i + 1) / 255.0f) * canvasSize.x;
-        const float y1 = canvasPos.y + canvasSize.y - (App::lastRamp[i + 1] * canvasSize.y);
+        const float y1 = canvasPos.y + canvasSize.y - (App::state.lastRamp[i + 1] * canvasSize.y);
         
         drawList->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), curveColor, curveThickness);
     }

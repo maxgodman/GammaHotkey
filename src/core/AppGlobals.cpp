@@ -30,10 +30,7 @@ namespace App
     std::wstring lastSelectedProfileName = L"";       
     
     Profile simpleProfile;
-    
-    bool gammaRampFailed = false;
-    float lastRamp[GammaConstants::RAMP_SIZE] = {};
-    
+        
     void SyncGammaToState()
     {
         if (state.IsGammaEnabled())
