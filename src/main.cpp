@@ -91,8 +91,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     if (!hWnd) return FALSE;
     
-    const HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GAMMAHOTKEY));
-
     MSG msg;
     ZeroMemory(&msg, sizeof(msg));
 
@@ -104,11 +102,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // Process all pending Windows messages first.
         if (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
         {
-            if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
         // When no messages, render ImGui frame.
         else
@@ -161,8 +156,8 @@ bool EnforceSingleInstance()
         // Another instance from this exact location is already running.
         MessageBoxW(
             nullptr,
-            L"GammaHotkey is already running from this location.\n\n"
-            L"Check your system tray for the GammaHotkey icon.",
+            VER_PRODUCTNAME_W L" is already running from this location.\n\n"
+            L"Check your system tray for the " VER_PRODUCTNAME_W L" icon.",
             L"Already Running",
             MB_OK | MB_ICONINFORMATION);
 
