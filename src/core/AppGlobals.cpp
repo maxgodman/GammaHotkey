@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Max Godman
 
 #include "AppGlobals.h"
+#include "Resource.h"
 #include "GammaManager.h"
 #include <cassert>
 
@@ -87,7 +88,7 @@ namespace App
     std::wstring GetStatusText()
     {
         // Base text shows current on/off state.
-        std::wstring statusText = state.IsGammaEnabled() ? L"GammaHotkey - On" : L"GammaHotkey - Off";
+        std::wstring statusText = state.IsGammaEnabled() ? VER_PRODUCTNAME_W L" - On" : VER_PRODUCTNAME_W L" - Off";
         
         // Append profile name if one is selected, providing context to user.
         if (state.IsAdvancedModeEnabled() && selectedProfileIndex >= 0 && selectedProfileIndex < (int)profiles.size())
