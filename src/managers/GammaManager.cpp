@@ -43,7 +43,10 @@ namespace GammaManager
             // 4. Apply gamma curve (power function).
             v = powf(v, 1.0f / gamma);
             
-            // Cache for comparison (avoids reapplying identical ramps).
+            // Cache for external use, such as the gamma curve preview.
+            // @TODO:   Refactor this, currently this is fine but is too rigid if we make changes such as:
+            //          - Build ramps without applying them.
+            //          - Update gamma ramp preview from pending setting changes without applying them.
             App::state.lastRamp[i] = v;
             
             // Convert to Windows gamma ramp format (16-bit integer, 0-65535).
