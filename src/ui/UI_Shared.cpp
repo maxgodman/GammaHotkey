@@ -378,10 +378,12 @@ void RenderTitleBar()
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 
+    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
     if (ImGui::Button("About##titlebar", ImVec2(aboutButtonWidth, UIConstants::TITLEBAR_HEIGHT)))
     {
         UI::state.showAboutDialog = true;
     }
+    ImGui::PopStyleVar();
 
     ImGui::SetCursorScreenPos(ImVec2(buttonX + aboutButtonWidth + 8, titleBarMin.y));
 
@@ -408,7 +410,7 @@ void RenderTitleBar()
     ImGui::PopStyleColor(4);
 
     // Title text (left side of title bar) with On/Off indicator.
-    ImGui::SetCursorScreenPos(ImVec2(titleBarMin.x + 10, titleBarMin.y + 8));
+    ImGui::SetCursorScreenPos(ImVec2(titleBarMin.x + 10, titleBarMin.y + 10));
     const std::wstring statusTextWide = App::GetStatusText();
     const std::string statusText = StringUtils::WideToUTF8(statusTextWide);
     ImGui::Text("%s", statusText.c_str());

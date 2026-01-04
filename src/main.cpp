@@ -42,6 +42,7 @@
 #include "SystemTrayManager.h"
 #include "ImGui_Integration.h"
 #include "UI_Shared.h"
+#include <windowsx.h>
 
 // Explicitly link libraries.
 // This seems to be handled automatically in VS by CoreLibraryDependencies in the project properties.
@@ -359,6 +360,94 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CoUninitialize();
         PostQuitMessage(0);
         break;
+
+    case WM_NCCALCSIZE:
+    {
+        if (wParam == TRUE)
+        {
+            NCCALCSIZE_PARAMS* params = (NCCALCSIZE_PARAMS*)lParam;
+
+            // Check if maximized by looking at window style.
+            const LONG windowStyle = GetWindowLong(hWnd, GWL_STYLE);
+            const bool maximized = (windowStyle & WS_MAXIMIZE) != 0;
+
+            if (maximized)
+            {
+                // When maximized, constrain to the monitor's work area.
+                // @TODO: This seems to constrain, but the taskbar renders black/blank.
+                const HMONITOR hMon = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+                MONITORINFO monInfo = { sizeof(MONITORINFO) };
+                GetMonitorInfo(hMon, &monInfo);
+                params->rgrc[0] = monInfo.rcWork;
+                return 0;
+            }
+            else
+            {
+                // When windowed, let the default calculation happen, but then
+                // remove the top non-client area that causes the white bar.
+                const LRESULT result = DefWindowProc(hWnd, message, wParam, lParam);
+
+                // Get the window's border thickness
+                const int borderThickness = GetSystemMetrics(SM_CXSIZEFRAME) +
+                    GetSystemMetrics(SM_CXPADDEDBORDER);
+
+                // Restore the top edge (removes the title bar space).
+                params->rgrc[0].top = params->rgrc[0].top - borderThickness;
+
+                return result;
+            }
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
+    case WM_NCHITTEST:
+    {
+        // Check if maximized, no resize handles when maximized.
+        const LONG windowStyle = GetWindowLong(hWnd, GWL_STYLE);
+        const bool maximized = (windowStyle & WS_MAXIMIZE) != 0;
+
+        if (maximized)
+        {
+            return HTCLIENT; // When maximized, return client area.
+        }
+
+        // First, let the default handle it.
+        const LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
+
+        // If default returned client area, check if we are on a border for resizing.
+        if (hit == HTCLIENT)
+        {
+            POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            ScreenToClient(hWnd, &point);
+
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+
+            // Border thickness for resize handles.
+            const int borderWidth = GetSystemMetrics(SM_CXSIZEFRAME) +
+                GetSystemMetrics(SM_CXPADDEDBORDER);
+            const int borderHeight = GetSystemMetrics(SM_CYSIZEFRAME) +
+                GetSystemMetrics(SM_CXPADDEDBORDER);
+
+            // Check edges for resize cursors.
+            bool onLeft = point.x < borderWidth;
+            bool onRight = point.x >= rect.right - borderWidth;
+            bool onTop = point.y < borderHeight;
+            bool onBottom = point.y >= rect.bottom - borderHeight;
+
+            // Return appropriate hit test for resize handles.
+            if (onTop && onLeft) return HTTOPLEFT;
+            if (onTop && onRight) return HTTOPRIGHT;
+            if (onBottom && onLeft) return HTBOTTOMLEFT;
+            if (onBottom && onRight) return HTBOTTOMRIGHT;
+            if (onLeft) return HTLEFT;
+            if (onRight) return HTRIGHT;
+            if (onTop) return HTTOP;
+            if (onBottom) return HTBOTTOM;
+        }
+
+        return hit;
+    }
 
     case WM_SIZING:
         // @TODO: Investigate best practices around handling WM_SIZING and WM_SIZE, uncertain of this approach.
