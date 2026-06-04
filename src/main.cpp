@@ -267,7 +267,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         App::SyncWindowSizeToState();
         
         // Validate selected monitor index, required after config load.
-        if (App::selectedDisplayIndex < 0 || App::selectedDisplayIndex >= (int)App::displays.size())
+        if (App::selectedDisplayIndex < -1 || App::selectedDisplayIndex >= (int)App::displays.size())
         {
             App::selectedDisplayIndex = 0; // Fallback to 0 if invalid.
         }

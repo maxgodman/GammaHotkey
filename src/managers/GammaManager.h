@@ -31,15 +31,15 @@
 namespace GammaManager
 {
     /**
-     * @brief Apply gamma settings from a profile to a specific display.
+     * @brief Apply gamma settings from a profile to a specific display, or all displays.
      * @param[in] profile Profile containing brightness, contrast, and gamma settings.
-     * @param[in] displayIndex Index into App::displays vector.
+     * @param[in] displayIndex Index into App::displays vector, or -1 to apply to all displays.
      */
     void ApplyProfile(const Profile& profile, const int displayIndex);
     
     /**
-     * @brief Reset gamma to default (linear) on a specific display.
-     * @param[in] displayIndex Index into App::displays vector.
+     * @brief Reset gamma to default (linear) on a specific display, or all displays.
+     * @param[in] displayIndex Index into App::displays vector, or -1 to apply to all displays.
      */
     void ResetDisplay(const int displayIndex);
     

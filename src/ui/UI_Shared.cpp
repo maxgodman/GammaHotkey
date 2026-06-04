@@ -125,32 +125,62 @@ void RenderDisplayComboBox()
     ImGui::Text("Display");
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 
-    if (ImGui::BeginCombo("##Display", App::displays.empty() ? "No displays" :
-        StringUtils::WideToUTF8(App::displays[App::selectedDisplayIndex].friendlyName).c_str()))
+    // Determine the preview text for the combo box.
+    const char* previewText = "No displays";
+    std::string previewStorage;
+    if (!App::displays.empty())
     {
-        for (int i = 0; i < (int)App::displays.size(); ++i)
+        if (App::selectedDisplayIndex == -1)
+            previewText = "All displays";
+        else
         {
-            const bool selected = (App::selectedDisplayIndex == i);
-            if (ImGui::Selectable(StringUtils::WideToUTF8(App::displays[i].friendlyName).c_str(), selected))
+            previewStorage = StringUtils::WideToUTF8(App::displays[App::selectedDisplayIndex].friendlyName);
+            previewText = previewStorage.c_str();
+        }
+    }
+
+    if (ImGui::BeginCombo("##Display", previewText))
+    {
+        // All displays option.
+        {
+            const bool selected = (App::selectedDisplayIndex == -1);
+            if (ImGui::Selectable("All displays##all", selected))
             {
-                // Reset gamma on the old display before switching.
-                if (App::selectedDisplayIndex != i)
+                if (App::selectedDisplayIndex != -1)
                 {
+                    // Reset gamma on the previous single display before switching.
                     GammaManager::ResetDisplay(App::selectedDisplayIndex);
                 }
-
-                // Switch to new display.
-                App::selectedDisplayIndex = i;
-
-                // Sync post display change.
+                App::selectedDisplayIndex = -1;
                 App::SyncGammaToState();
-                ConfigManager::Save();  // Save selected display.
+                ConfigManager::Save();
             }
-
             if (selected)
                 ImGui::SetItemDefaultFocus();
         }
 
+        // Individual display options.
+        for (int i = 0; i < (int)App::displays.size(); ++i)
+        {
+            const bool selected = (App::selectedDisplayIndex == i);
+
+            // Create label with unique ID: "Display Name##index"
+            std::string label = StringUtils::WideToUTF8(App::displays[i].friendlyName) + "##" + std::to_string(i);
+
+            if (ImGui::Selectable(label.c_str(), selected))
+            {
+                if (App::selectedDisplayIndex != i)
+                {
+                    // Reset gamma on the previous display before switching.
+                    GammaManager::ResetDisplay(App::selectedDisplayIndex);
+                }
+                App::selectedDisplayIndex = i;
+                App::SyncGammaToState();
+                ConfigManager::Save();
+            }
+            if (selected)
+                ImGui::SetItemDefaultFocus();
+        }
         ImGui::EndCombo();
     }
 

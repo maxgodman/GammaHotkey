@@ -63,27 +63,41 @@ namespace GammaManager
     void ApplyProfile(const Profile& profile, const int displayIndex)
     {
         if (App::displays.empty()) return;
-        
+
+        if (displayIndex == -1)
+        {
+            for (int index = 0; index < (int)App::displays.size(); ++index)
+                ApplyProfile(profile, index);
+            return;
+        }
+
         if (displayIndex < 0 || displayIndex >= (int)App::displays.size())
             return; // Invalid displayIndex.
-        
+
         // Create device context for the target display, for the SetDeviceGammaRamp() call.
         const HDC hdc = CreateDC(NULL, App::displays[displayIndex].deviceName.c_str(), NULL, NULL);
         if (!hdc) return;
-
         WORD ramp[3][GammaConstants::RAMP_SIZE];
         BuildGammaRamp(profile, ramp);
-
         const BOOL success = SetDeviceGammaRamp(hdc, ramp);
         App::state.gammaRampFailed = !success;
         DeleteDC(hdc);
     }
-    
+
     void ResetDisplay(const int displayIndex)
     {
+        if (App::displays.empty()) return;
+
+        if (displayIndex == -1)
+        {
+            for (int index = 0; index < (int)App::displays.size(); ++index)
+                ResetDisplay(index);
+            return;
+        }
+
         if (displayIndex < 0 || displayIndex >= (int)App::displays.size())
             return; // Invalid displayIndex.
-        
+
         WORD defaultRamp[3][GammaConstants::RAMP_SIZE];
         for (int i = 0; i < GammaConstants::RAMP_SIZE; ++i)
         {
@@ -92,7 +106,7 @@ namespace GammaManager
             defaultRamp[1][i] = val;
             defaultRamp[2][i] = val;
         }
-        
+
         const HDC hDC = CreateDC(NULL, App::displays[displayIndex].deviceName.c_str(), NULL, NULL);
         if (hDC)
         {
