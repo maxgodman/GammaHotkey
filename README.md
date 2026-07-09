@@ -5,17 +5,21 @@
 A lightweight portable application for adjusting your display's brightness, contrast, and gamma using hotkeys.<br>
 Built as a clean modern solution, with functionality not found in alternative applications.
 
-![Version](https://img.shields.io/badge/version-0.1-blue)
+![Version](https://img.shields.io/badge/version-0.2-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🚀 Getting Started
 
-1. Download the latest release from the [Releases](../../releases) page.
-3. Run `GammaHotkey.exe` - **No installation!**
-4. Adjust sliders and options, bind an on/off hotkey, done!
-5. Switch to Advanced mode for additional functionality.
-6. Exit the app by right clicking the icon in the system tray and select "Exit" - this will revert gamma back to default.
+**Notice:** Currently, there are no pre-compiled releases available.<br>
+The built executable is falsely flagged as a virus by Windows Defender.<br>
+Feel free to review the code and build the app for personal use!
+
+1. ~~Download the latest release from the [Releases](../../releases) page.~~
+2. Run `GammaHotkey.exe` - **No installation!**
+3. Adjust sliders and options, bind an on/off hotkey, done!
+4. Switch to Advanced mode for additional functionality.
+5. Exit the app by right clicking the icon in the system tray and select "Exit" - this will revert gamma back to default.
 
 ## 🏆 Pro-Tip
 
