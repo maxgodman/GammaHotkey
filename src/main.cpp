@@ -497,6 +497,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
+    case WM_DISPLAYCHANGE:
+    {
+        // A monitor was added/removed or the resolution changed. Re-enumerate displays and
+        // try to preserve the current selection by device name so gamma keeps targeting the
+        // same physical monitor even if indices shifted.
+        std::wstring previousDeviceName;
+        if (App::selectedDisplayIndex >= 0 && App::selectedDisplayIndex < (int)App::displays.size())
+            previousDeviceName = App::displays[App::selectedDisplayIndex].deviceName;
+
+        DisplayManager::EnumerateDisplays();
+
+        if (App::selectedDisplayIndex != -1) // -1 means "all displays", which stays valid.
+        {
+            int newIndex = -1;
+            if (!previousDeviceName.empty())
+            {
+                for (int index = 0; index < (int)App::displays.size(); ++index)
+                {
+                    if (App::displays[index].deviceName == previousDeviceName)
+                    {
+                        newIndex = index;
+                        break;
+                    }
+                }
+            }
+
+            if (newIndex >= 0)
+                App::selectedDisplayIndex = newIndex;
+            else
+                App::selectedDisplayIndex = App::displays.empty() ? 0 : 0; // Fall back to the first display.
+        }
+
+        // Re-apply current gamma so it reflects on the (possibly changed) selected display.
+        App::SyncGammaToState();
+        break;
+    }
+
     case WM_ERASEBKGND:
         // Don't erase background, ImGui will draw everything.
         return 1;
