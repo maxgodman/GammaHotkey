@@ -95,7 +95,7 @@ Settings are stored in `{ExecutableName}.ini` in the same folder as the executab
 
 - Visual Studio 2026
 - Windows 10 SDK
-- C++17 compiler
+- C++20 compiler
 
 ### Build Steps
 
@@ -116,7 +116,7 @@ Settings are stored in `{ExecutableName}.ini` in the same folder as the executab
    - Configuration: Release
    - Platform: x64
 
-4. Output: `x64/Release/GammaHotkey.exe`
+5. Output: `x64/Release/GammaHotkey.exe`
 
 ### Dependencies
 
