@@ -1,0 +1,3 @@
+# Normalize line endings: store as LF in the repo, check out native per platform.
+# Git auto-detects binary files and leaves them untouched.
+* text=auto
