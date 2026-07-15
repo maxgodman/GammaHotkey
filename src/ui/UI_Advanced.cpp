@@ -301,16 +301,35 @@ void RenderAdvancedUI()
                         {
                             if (UI::state.renameBuffer[0] != '\0')
                             {
-                                App::profiles[i].name = StringUtils::UTF8ToWide(UI::state.renameBuffer);
-                                if (selected)
+                                const std::wstring newName = StringUtils::UTF8ToWide(UI::state.renameBuffer);
+                                const int existing = ProfileManager::FindByName(newName);
+
+                                if (existing >= 0 && existing != i)
                                 {
-                                    App::workingProfile.name = App::profiles[i].name;
-                                    strncpy_s(UI::state.profileNameBuffer, sizeof(UI::state.profileNameBuffer),
-                                        UI::state.renameBuffer, _TRUNCATE);
+                                    // Another profile already uses this name. Applying it would
+                                    // create a duplicate that gets silently dropped on next load.
+                                    // On Enter, keep editing so the user can pick another name;
+                                    // on lost focus, abandon the rename and keep the original name.
+                                    if (!commitRename)
+                                        UI::state.renamingProfileIndex = -1;
                                 }
-                                ConfigManager::Save();
+                                else
+                                {
+                                    App::profiles[i].name = newName;
+                                    if (selected)
+                                    {
+                                        App::workingProfile.name = App::profiles[i].name;
+                                        strncpy_s(UI::state.profileNameBuffer, sizeof(UI::state.profileNameBuffer),
+                                            UI::state.renameBuffer, _TRUNCATE);
+                                    }
+                                    ConfigManager::Save();
+                                    UI::state.renamingProfileIndex = -1;
+                                }
                             }
-                            UI::state.renamingProfileIndex = -1;
+                            else
+                            {
+                                UI::state.renamingProfileIndex = -1;
+                            }
                         }
                         else if (cancelRename)
                         {
