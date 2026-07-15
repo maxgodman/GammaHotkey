@@ -66,34 +66,9 @@ void RenderHotkeyCaptureDialog()
 
         if (ImGui::Button("Clear", ImVec2(120, 0)))
         {
-            // Clear the hotkey by setting it to 0 directly.
-            switch (UI::state.capturingHotkeyType)
-            {
-            case HotkeyCapture::TOGGLE:
-                App::toggleHotkey = 0;
-                break;
-            case HotkeyCapture::PREVIOUS_PROFILE:
-                App::previousProfileHotkey = 0;
-                break;
-            case HotkeyCapture::NEXT_PROFILE:
-                App::nextProfileHotkey = 0;
-                break;
-            case HotkeyCapture::PROFILE:
-                if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
-                {
-                    // Existing profile: Clear in both array and working copy.
-                    App::profiles[App::selectedProfileIndex].hotkey = 0;
-                    App::workingProfile.hotkey = 0;
-                }
-                else
-                {
-                    // New profile: Clear in working copy only.
-                    App::workingProfile.hotkey = 0;
-                }
-                UI::state.profileHotkeyBuffer[0] = '\0';  // Clear the display buffer.
-                break;
-            }
-            
+            // 0 clears the binding.
+            SetHotkeyForCaptureTarget(0);
+
             ConfigManager::Save();
             HotkeyManager::UnregisterAll(App::mainWindow);
             HotkeyManager::RegisterAll(App::mainWindow);
@@ -176,39 +151,10 @@ void RenderHotkeyConflictDialog()
         
         if (ImGui::Button("Yes", ImVec2(120, 0)))
         {
-            // Clear the conflicting hotkey first.
+            // Free the key from its previous owner, then bind it to the action being captured.
             ClearConflictingHotkey(UI::state.conflictingHotkey);
-            
-            // Apply the new hotkey directly, not using ApplyHotkeyChange() to avoid flag issue.
-            // @TODO: Handle this better?
-            switch (UI::state.capturingHotkeyType)
-            {
-            case HotkeyCapture::TOGGLE:
-                App::toggleHotkey = UI::state.conflictingHotkey;
-                break;
-            case HotkeyCapture::PREVIOUS_PROFILE:
-                App::previousProfileHotkey = UI::state.conflictingHotkey;
-                break;
-            case HotkeyCapture::NEXT_PROFILE:
-                App::nextProfileHotkey = UI::state.conflictingHotkey;
-                break;
-            case HotkeyCapture::PROFILE:
-                if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
-                {
-                    // Existing profile: Update both array and working copy.
-                    App::profiles[App::selectedProfileIndex].hotkey = UI::state.conflictingHotkey;
-                    App::workingProfile.hotkey = UI::state.conflictingHotkey;
-                }
-                else
-                {
-                    // New profile: Update working copy only.
-                    App::workingProfile.hotkey = UI::state.conflictingHotkey;
-                }
-                strncpy_s(UI::state.profileHotkeyBuffer, sizeof(UI::state.profileHotkeyBuffer),
-                         StringUtils::WideToUTF8(StringUtils::VkToName(UI::state.conflictingHotkey)).c_str(), _TRUNCATE);
-                break;
-            }
-            
+            SetHotkeyForCaptureTarget(UI::state.conflictingHotkey);
+
             ConfigManager::Save();
             HotkeyManager::UnregisterAll(App::mainWindow);
             HotkeyManager::RegisterAll(App::mainWindow);

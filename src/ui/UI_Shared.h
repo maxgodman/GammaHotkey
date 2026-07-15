@@ -70,3 +70,12 @@ void OnHotkeyCapture(const UINT vk);
  * @param vk Virtual-key code (e.g. VK_F1, VK_CONTROL).
  */
 void ClearConflictingHotkey(const UINT vk);
+
+/**
+ * @brief Bind the action currently being captured (UI::state.capturingHotkeyType) to a key.
+ * @param vk Virtual-key code, or 0 to clear the binding.
+ *
+ * Writes only the matching binding plus the profile-hotkey display buffer. The caller is
+ * still responsible for saving config, re-registering hotkeys and closing the capture popup.
+ */
+void SetHotkeyForCaptureTarget(const UINT vk);

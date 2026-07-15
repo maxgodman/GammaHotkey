@@ -83,6 +83,37 @@ static UINT GetHotkeyForCaptureTarget()
     return 0;
 }
 
+void SetHotkeyForCaptureTarget(const UINT vk)
+{
+    switch (UI::state.capturingHotkeyType)
+    {
+    case HotkeyCapture::TOGGLE:
+        App::toggleHotkey = vk;
+        break;
+    case HotkeyCapture::PREVIOUS_PROFILE:
+        App::previousProfileHotkey = vk;
+        break;
+    case HotkeyCapture::NEXT_PROFILE:
+        App::nextProfileHotkey = vk;
+        break;
+    case HotkeyCapture::PROFILE:
+        // An existing profile is edited in place in the profiles array; a profile that
+        // hasn't been saved yet lives only in workingProfile. Always update workingProfile
+        // so the pending edit survives a "Save New Profile".
+        if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
+            App::profiles[App::selectedProfileIndex].hotkey = vk;
+        App::workingProfile.hotkey = vk;
+
+        // Keep the display buffer in sync (empty when the binding is cleared).
+        if (vk == 0)
+            UI::state.profileHotkeyBuffer[0] = '\0';
+        else
+            strncpy_s(UI::state.profileHotkeyBuffer, sizeof(UI::state.profileHotkeyBuffer),
+                      StringUtils::WideToUTF8(StringUtils::VkToName(vk)).c_str(), _TRUNCATE);
+        break;
+    }
+}
+
 /**
  * @brief Apply hotkey change after capture.
  */
@@ -108,41 +139,8 @@ static void ApplyHotkeyChange(const UINT vk)
     }
     
     // Apply the new hotkey (or clear it if vk is 0).
-    switch (UI::state.capturingHotkeyType)
-    {
-    case HotkeyCapture::TOGGLE:
-        App::toggleHotkey = vk;
-        break;
-    case HotkeyCapture::PREVIOUS_PROFILE:
-        App::previousProfileHotkey = vk;
-        break;
-    case HotkeyCapture::NEXT_PROFILE:
-        App::nextProfileHotkey = vk;
-        break;
-    case HotkeyCapture::PROFILE:
-        // For new profiles (selectedProfileIndex == -1): Store in workingProfile temporarily.
-        // For existing profiles: Update both profiles array and workingProfile.
-        // When user saves, workingProfile.hotkey gets committed to profiles array.
-        
-        if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
-        {
-            // Existing profile: Update saved profile and working copy.
-            App::profiles[App::selectedProfileIndex].hotkey = vk;
-            App::workingProfile.hotkey = vk;
-        }
-        else
-        {
-            // New profile (not yet saved): Update working copy only.
-            // When user clicks "Save New Profile", this will be committed.
-            App::workingProfile.hotkey = vk;
-        }
-        
-        // Update display buffer (works for both new and existing profiles).
-        strncpy_s(UI::state.profileHotkeyBuffer, sizeof(UI::state.profileHotkeyBuffer),
-                 StringUtils::WideToUTF8(StringUtils::VkToName(vk)).c_str(), _TRUNCATE);
-        break;
-    }
-    
+    SetHotkeyForCaptureTarget(vk);
+
     // Always save when assigning hotkeys.
     ConfigManager::Save();
     
