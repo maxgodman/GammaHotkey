@@ -94,8 +94,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ZeroMemory(&msg, sizeof(msg));
 
     // Main message loop.
-    // Uses PeekMessage instead of GetMessage.
-    // PeekMessage is non-blocking, allowing continuous ImGui rendering even when there are no Windows messages.
+    // Uses PeekMessage (non-blocking) so ImGui can render continuously while the window
+    // is visible. When the window is hidden or minimized to the tray there is nothing to
+    // draw, so we block in WaitMessage instead of spinning, keeping idle CPU usage at zero.
     while (msg.message != WM_QUIT)
     {
         // Process all pending Windows messages first.
@@ -104,11 +105,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        // When no messages, render ImGui frame.
+        else if (App::mainWindow && IsWindowVisible(App::mainWindow) && !IsIconic(App::mainWindow))
+        {
+            // Window is visible: render the next ImGui frame.
+            RenderImGuiFrame();
+        }
         else
         {
-            // When no messages, render ImGui frame.
-            RenderImGuiFrame();
+            // Window is hidden/minimized: sleep until the next message arrives.
+            WaitMessage();
         }
     }
 
