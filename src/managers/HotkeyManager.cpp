@@ -7,117 +7,81 @@
 #include "GammaHotkeyTypes.h"
 #include "ProfileManager.h"
 #include "UI_Shared.h"
+#include <vector>
 
 namespace HotkeyManager
 {
-    // Keyboard hook handle and target window.
-    static HHOOK s_keyboardHook = nullptr;
-    static HWND s_targetWindow = nullptr;
-    
-    /**
-     * Low-level keyboard hook callback.
-     * Called by Windows for every keystroke system-wide (before any application sees it).
-     * We check if it matches our hotkeys, and consume it if so.
-     */
-    static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+    // IDs currently registered with Windows, tracked so we can unregister exactly
+    // what we registered even if the profile list changes between calls.
+    static std::vector<int> s_registeredIds;
+
+    // Register a single hotkey, tracking it on success. vk == 0 means "unbound", skip.
+    // Registration can fail if another application already owns the global hotkey; we
+    // tolerate that silently (the binding simply won't fire) rather than stealing the
+    // key system-wide, which is the cooperative behavior RegisterHotKey is designed for.
+    static void RegisterOne(const HWND hwnd, const int id, const UINT vk)
     {
-        if (nCode == HC_ACTION)
-        {
-            KBDLLHOOKSTRUCT* pKeyboard = (KBDLLHOOKSTRUCT*)lParam;
-            
-            // Only handle key down events (ignore key up).
-            // WM_SYSKEYDOWN is for system keys such as Alt.
-            if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
-            {
-                const UINT vk = pKeyboard->vkCode;
-                
-                // Check if this key matches any of our registered hotkeys.
-                bool handled = false;
-                
-                // Check toggle hotkey.
-                if (App::toggleHotkey != 0 && vk == App::toggleHotkey)
-                {
-                    HandleHotkey(HotkeyIDs::TOGGLE);
-                    handled = true;
-                }
-                // Check previous profile hotkey.
-                else if (App::previousProfileHotkey != 0 && vk == App::previousProfileHotkey)
-                {
-                    HandleHotkey(HotkeyIDs::PREVIOUS_PROFILE);
-                    handled = true;
-                }
-                // Check next profile hotkey.
-                else if (App::nextProfileHotkey != 0 && vk == App::nextProfileHotkey)
-                {
-                    HandleHotkey(HotkeyIDs::NEXT_PROFILE);
-                    handled = true;
-                }
-                // Check profile hotkeys.
-                else
-                {
-                    for (size_t i = 0; i < App::profiles.size(); ++i)
-                    {
-                        if (App::profiles[i].hotkey != 0 && vk == App::profiles[i].hotkey)
-                        {
-                            HandleHotkey(HotkeyIDs::PROFILE_BASE + (int)i);
-                            handled = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // If we handled the hotkey, consume it (don't pass to other apps).
-                if (handled)
-                {
-                    return 1;
-                }
-            }
-        }
-        
-        // Pass to next hook.
-        return CallNextHookEx(s_keyboardHook, nCode, wParam, lParam);
+        if (vk == 0)
+            return;
+
+        // MOD_NOREPEAT: holding the key fires once, not repeatedly.
+        if (RegisterHotKey(hwnd, id, MOD_NOREPEAT, vk))
+            s_registeredIds.push_back(id);
     }
-    
+
     void UnregisterAll(const HWND hwnd)
     {
-        // Unhook keyboard hook.
-        if (s_keyboardHook != nullptr)
-        {
-            UnhookWindowsHookEx(s_keyboardHook);
-            s_keyboardHook = nullptr;
-        }
-
-        s_targetWindow = nullptr;
+        for (const int id : s_registeredIds)
+            UnregisterHotKey(hwnd, id);
+        s_registeredIds.clear();
     }
-    
+
     void RegisterAll(const HWND hwnd)
     {
-        // Unregister existing hook if any.
+        // Clear any existing registrations first.
         UnregisterAll(hwnd);
-        
-        // Setup low-level keyboard hook.
-        s_targetWindow = hwnd;
-        s_keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(nullptr), 0);
-        
-        if (s_keyboardHook == nullptr)
+
+        RegisterOne(hwnd, HotkeyIDs::TOGGLE, App::toggleHotkey);
+        RegisterOne(hwnd, HotkeyIDs::PREVIOUS_PROFILE, App::previousProfileHotkey);
+        RegisterOne(hwnd, HotkeyIDs::NEXT_PROFILE, App::nextProfileHotkey);
+
+        for (size_t index = 0; index < App::profiles.size(); ++index)
+            RegisterOne(hwnd, HotkeyIDs::PROFILE_BASE + (int)index, App::profiles[index].hotkey);
+    }
+
+    bool IsBindableKey(const UINT vk, const char** reasonForRejection)
+    {
+        switch (vk)
         {
-            // Hook setup failed.
-            const DWORD error = GetLastError();
-            wchar_t msg[256];
-            swprintf_s(msg, L"Failed to setup keyboard hook. Error code: %d", error);
-            MessageBoxW(hwnd, msg, L"Hotkey Error", MB_OK | MB_ICONERROR);
+        // Bare modifier keys cannot be fired on their own by RegisterHotKey.
+        case VK_SHIFT:   case VK_LSHIFT:   case VK_RSHIFT:
+        case VK_CONTROL: case VK_LCONTROL: case VK_RCONTROL:
+        case VK_MENU:    case VK_LMENU:    case VK_RMENU:
+        case VK_LWIN:    case VK_RWIN:
+            if (reasonForRejection)
+                *reasonForRejection = "Modifier keys (Shift, Ctrl, Alt, Win) can't be used on their own.";
+            return false;
+
+        // F12 is reserved by Windows for the debugger.
+        case VK_F12:
+            if (reasonForRejection)
+                *reasonForRejection = "F12 is reserved by Windows and can't be used.";
+            return false;
+
+        default:
+            return true;
         }
     }
-    
+
     void HandleHotkey(const int hotkeyId)
     {
-        // Close any open context menus (e.g. System Tray menu).
-        // This is needed because our keyboard hook consumes keys before Windows can close menus.
+        // Close any open context menus (e.g. the system tray menu) so a hotkey press
+        // while the menu is open doesn't leave it stuck open.
         if (App::mainWindow)
         {
             SendMessage(App::mainWindow, WM_CANCELMODE, 0, 0);
         }
-        
+
         if (hotkeyId == HotkeyIDs::TOGGLE)
         {
             // Update state and sync.
@@ -139,6 +103,7 @@ namespace HotkeyManager
                 ProfileManager::CycleProfile(-1);
                 SyncUIWithCurrentProfile();
             }
+            UI::SyncUIToState();
         }
         else if (hotkeyId == HotkeyIDs::NEXT_PROFILE)
         {
@@ -154,14 +119,16 @@ namespace HotkeyManager
                 ProfileManager::CycleProfile(1);
                 SyncUIWithCurrentProfile();
             }
+            UI::SyncUIToState();
         }
-        else if (hotkeyId >= HotkeyIDs::PROFILE_BASE && 
+        else if (hotkeyId >= HotkeyIDs::PROFILE_BASE &&
                  hotkeyId < HotkeyIDs::PROFILE_BASE + (int)App::profiles.size())
         {
             const int profileIndex = hotkeyId - HotkeyIDs::PROFILE_BASE;
             App::state.SetGammaEnabled(true); // Ensure enabled when profile triggered.
             ProfileManager::ApplyByIndex(profileIndex);
             SyncUIWithCurrentProfile();
+            UI::SyncUIToState();
         }
     }
 }

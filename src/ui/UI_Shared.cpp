@@ -11,6 +11,7 @@
 #include "GammaManager.h"
 #include "ConfigManager.h"
 #include "StartupManager.h"
+#include "HotkeyManager.h"
 #include "StringUtils.h"
 #include <string>
 
@@ -79,16 +80,16 @@ static void ApplyHotkeyChange(const UINT vk)
     // Apply the new hotkey (or clear it if vk is 0).
     switch (UI::state.capturingHotkeyType)
     {
-    case 0: // Toggle.
+    case HotkeyCapture::TOGGLE:
         App::toggleHotkey = vk;
         break;
-    case 2: // Previous.
+    case HotkeyCapture::PREVIOUS_PROFILE:
         App::previousProfileHotkey = vk;
         break;
-    case 3: // Next.
+    case HotkeyCapture::NEXT_PROFILE:
         App::nextProfileHotkey = vk;
         break;
-    case 4: // Profile.
+    case HotkeyCapture::PROFILE:
         // For new profiles (selectedProfileIndex == -1): Store in workingProfile temporarily.
         // For existing profiles: Update both profiles array and workingProfile.
         // When user saves, workingProfile.hotkey gets committed to profiles array.
@@ -116,7 +117,7 @@ static void ApplyHotkeyChange(const UINT vk)
     ConfigManager::Save();
     
     // Mark that we're done capturing, this will trigger hotkey re-registration.
-    UI::state.capturingHotkeyType = -1;
+    UI::state.capturingHotkeyType = HotkeyCapture::NONE;
     UI::state.closeCapturePopup = true;  // Request popup closure.
 }
 
@@ -642,8 +643,18 @@ void SyncUIWithCurrentProfile()
 
 void OnHotkeyCapture(const UINT vk)
 {
-    if (UI::state.capturingHotkeyType != -1)
+    if (UI::state.capturingHotkeyType == HotkeyCapture::NONE)
+        return; // Not capturing.
+
+    // Reject keys that can't be used as hotkeys (bare modifiers, F12).
+    // Keep the capture dialog open and show the user why, so they can press another key.
+    const char* reason = nullptr;
+    if (!HotkeyManager::IsBindableKey(vk, &reason))
     {
-        ApplyHotkeyChange(vk);
+        UI::state.captureRejectReason = reason ? reason : "That key can't be used as a hotkey.";
+        return;
     }
+
+    UI::state.captureRejectReason.clear();
+    ApplyHotkeyChange(vk);
 }

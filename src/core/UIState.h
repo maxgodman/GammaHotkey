@@ -31,6 +31,7 @@ public:
     bool hotkeySuspended = false;
     UINT conflictingHotkey = 0;
     std::string conflictDescription = "";
+    std::string captureRejectReason = ""; // Shown in the capture dialog when an unbindable key is pressed.
 
     // Mode switching.
     bool modeJustChanged = false;

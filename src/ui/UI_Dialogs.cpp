@@ -20,7 +20,8 @@ void RenderHotkeyCaptureDialog()
     {
         ImGui::OpenPopup("Capture Hotkey");
         UI::state.showHotkeyCapture = false;
-        
+        UI::state.captureRejectReason.clear();
+
         // Suspend all hotkeys while capturing.
         if (!UI::state.hotkeySuspended)
         {
@@ -44,31 +45,40 @@ void RenderHotkeyCaptureDialog()
         std::string typeStr;
         switch (UI::state.capturingHotkeyType)
         {
-            case 0: typeStr = "Toggle On/Off"; break;
-            case 2: typeStr = "Previous Profile"; break;
-            case 3: typeStr = "Next Profile"; break;
-            case 4: typeStr = "Profile Hotkey"; break;
-            default: typeStr = "Unknown"; break;
+            case HotkeyCapture::TOGGLE:           typeStr = "Toggle On/Off"; break;
+            case HotkeyCapture::PREVIOUS_PROFILE: typeStr = "Previous Profile"; break;
+            case HotkeyCapture::NEXT_PROFILE:     typeStr = "Next Profile"; break;
+            case HotkeyCapture::PROFILE:          typeStr = "Profile Hotkey"; break;
+            default:                              typeStr = "Unknown"; break;
         }
         
         ImGui::Text("Capturing for: %s", typeStr.c_str());
+
+        // Show why the last key press was rejected, if any.
+        if (!UI::state.captureRejectReason.empty())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.7f, 0.0f, 1.0f));
+            ImGui::TextWrapped("%s", UI::state.captureRejectReason.c_str());
+            ImGui::PopStyleColor();
+        }
+
         ImGui::Spacing();
-        
+
         if (ImGui::Button("Clear", ImVec2(120, 0)))
         {
             // Clear the hotkey by setting it to 0 directly.
             switch (UI::state.capturingHotkeyType)
             {
-            case 0: // Toggle.
+            case HotkeyCapture::TOGGLE:
                 App::toggleHotkey = 0;
                 break;
-            case 2: // Previous.
+            case HotkeyCapture::PREVIOUS_PROFILE:
                 App::previousProfileHotkey = 0;
                 break;
-            case 3: // Next.
+            case HotkeyCapture::NEXT_PROFILE:
                 App::nextProfileHotkey = 0;
                 break;
-            case 4: // Profile
+            case HotkeyCapture::PROFILE:
                 if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
                 {
                     // Existing profile: Clear in both array and working copy.
@@ -87,22 +97,22 @@ void RenderHotkeyCaptureDialog()
             ConfigManager::Save();
             HotkeyManager::UnregisterAll(App::mainWindow);
             HotkeyManager::RegisterAll(App::mainWindow);
-            
-            UI::state.capturingHotkeyType = -1;
+
+            UI::state.capturingHotkeyType = HotkeyCapture::NONE;
             ImGui::CloseCurrentPopup();
         }
-        
+
         ImGui::SameLine();
-        
+
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
         {
-            UI::state.capturingHotkeyType = -1;
+            UI::state.capturingHotkeyType = HotkeyCapture::NONE;
             ImGui::CloseCurrentPopup();
         }
-        
+
         ImGui::EndPopup();
     }
-    else if (UI::state.hotkeySuspended && UI::state.capturingHotkeyType == -1)
+    else if (UI::state.hotkeySuspended && UI::state.capturingHotkeyType == HotkeyCapture::NONE)
     {
         // Popup was closed, re-register hotkeys.
         HotkeyManager::RegisterAll(App::mainWindow);
@@ -173,16 +183,16 @@ void RenderHotkeyConflictDialog()
             // @TODO: Handle this better?
             switch (UI::state.capturingHotkeyType)
             {
-            case 0: // Toggle.
+            case HotkeyCapture::TOGGLE:
                 App::toggleHotkey = UI::state.conflictingHotkey;
                 break;
-            case 2: // Previous.
+            case HotkeyCapture::PREVIOUS_PROFILE:
                 App::previousProfileHotkey = UI::state.conflictingHotkey;
                 break;
-            case 3: // Next.
+            case HotkeyCapture::NEXT_PROFILE:
                 App::nextProfileHotkey = UI::state.conflictingHotkey;
                 break;
-            case 4: // Profile.
+            case HotkeyCapture::PROFILE:
                 if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
                 {
                     // Existing profile: Update both array and working copy.
@@ -202,19 +212,19 @@ void RenderHotkeyConflictDialog()
             ConfigManager::Save();
             HotkeyManager::UnregisterAll(App::mainWindow);
             HotkeyManager::RegisterAll(App::mainWindow);
-            
-            UI::state.capturingHotkeyType = -1;
+
+            UI::state.capturingHotkeyType = HotkeyCapture::NONE;
             ImGui::CloseCurrentPopup();
         }
-        
+
         ImGui::SameLine();
-        
+
         if (ImGui::Button("No", ImVec2(120, 0)))
         {
-            UI::state.capturingHotkeyType = -1;
+            UI::state.capturingHotkeyType = HotkeyCapture::NONE;
             ImGui::CloseCurrentPopup();
         }
-        
+
         ImGui::EndPopup();
     }
 }

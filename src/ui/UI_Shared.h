@@ -7,6 +7,20 @@
 #include "GammaHotkeyTypes.h"
 
 /**
+ * @brief Identifies which hotkey the capture dialog is currently binding.
+ *
+ * Stored in UIState::capturingHotkeyType. NONE means the app is not capturing.
+ */
+namespace HotkeyCapture
+{
+    constexpr int NONE = -1;
+    constexpr int TOGGLE = 0;
+    constexpr int PREVIOUS_PROFILE = 1;
+    constexpr int NEXT_PROFILE = 2;
+    constexpr int PROFILE = 3;
+}
+
+/**
  * @brief Renders the Display selection combo box.
  */
 void RenderDisplayComboBox();

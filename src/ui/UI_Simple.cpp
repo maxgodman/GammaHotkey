@@ -83,7 +83,7 @@ void RenderSimpleUI()
         if (ImGui::Button("Set", ImVec2(buttonWidth, 0)))
         {
             UI::state.showHotkeyCapture = true;
-            UI::state.capturingHotkeyType = 0;
+            UI::state.capturingHotkeyType = HotkeyCapture::TOGGLE;
         }
         if (ImGui::IsItemHovered())
         {

@@ -19,8 +19,11 @@
  *   while allowing multiple instances via renamed/relocated copies.
  * - DPI awareness:
  *   Per-monitor DPI V2 for proper scaling across multiple monitors.
- * - Keyboard hook instead of RegisterHotKey:
- *   Allows binding any key including systems keys such as Alt/F10, chorded inputs are not supported.
+ * - RegisterHotKey for global hotkeys:
+ *   Binds single keys (letters, digits, function keys including F10) as system-wide hotkeys.
+ *   Bare modifier keys (Alt/Ctrl/Shift/Win alone) and F12 are not supported, see HotkeyManager.
+ *   A low-level keyboard hook was deliberately avoided as it resembles a keylogger and triggers
+ *   antivirus false positives. Chorded (modifier+key) inputs are not supported.
  * - Simple and Advanced modes:
  *   Simple mode by default offers frictionless basic functionality, for users looking to quickly
  *   set up gamma adjustments with a toggle hotkey.
@@ -548,6 +551,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // Block F10 and other menu accelerators.
         // Return MNC_CLOSE to prevent beep sound.
         return MAKELRESULT(0, MNC_CLOSE);
+
+    case WM_HOTKEY:
+        // A registered global hotkey fired. wParam is the hotkey ID.
+        HotkeyManager::HandleHotkey((int)wParam);
+        return 0;
 
     case SystemTrayIDs::WM_ICON:
         if (lParam == WM_LBUTTONDOWN)

@@ -182,7 +182,7 @@ void RenderAdvancedUI()
             if (ImGui::Button("Set##ProfileHotkey", ImVec2(buttonWidth, 0)))
             {
                 UI::state.showHotkeyCapture = true;
-                UI::state.capturingHotkeyType = 4;
+                UI::state.capturingHotkeyType = HotkeyCapture::PROFILE;
             }
 
             ImGui::Spacing();
@@ -411,19 +411,19 @@ void RenderAdvancedUI()
             ImGui::Text("Global Hotkeys");
             ImGui::Separator();
 
-            RenderHotkeyDisplay("Toggle On/Off:", "##ToggleHotkey", App::toggleHotkey, 0);
+            RenderHotkeyDisplay("Toggle On/Off:", "##ToggleHotkey", App::toggleHotkey, HotkeyCapture::TOGGLE);
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Hotkey to toggle gamma adjustments on/off");
             }
 
-            RenderHotkeyDisplay("Previous Profile:", "##PrevHotkey", App::previousProfileHotkey, 2);
+            RenderHotkeyDisplay("Previous Profile:", "##PrevHotkey", App::previousProfileHotkey, HotkeyCapture::PREVIOUS_PROFILE);
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Hotkey to switch to the previous profile in the list");
             }
 
-            RenderHotkeyDisplay("Next Profile:", "##NextHotkey", App::nextProfileHotkey, 3);
+            RenderHotkeyDisplay("Next Profile:", "##NextHotkey", App::nextProfileHotkey, HotkeyCapture::NEXT_PROFILE);
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Hotkey to switch to the next profile in the list");
