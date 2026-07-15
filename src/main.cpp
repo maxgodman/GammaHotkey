@@ -77,11 +77,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (!EnforceSingleInstance())
         return 0;
 
-    // Enable per-monitor DPI awareness V2.
-    // This enables automatic DPI scaling when moving the window between monitors with different DPIs.
-    // V2 specifically enables WM_DPICHANGED messages for dynamic rescaling during window moves.
-    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, AppConstants::MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_GAMMAHOTKEY, szWindowClass, AppConstants::MAX_LOADSTRING);
     RegisterMainWindowClass(hInstance);

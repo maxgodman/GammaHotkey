@@ -197,6 +197,9 @@
     <ResourceCompile Include="resources\GammaHotkey.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Manifest Include="resources\GammaHotkey.manifest" />
+  </ItemGroup>
+  <ItemGroup>
     <Image Include="resources\icons\gammahotkey.ico" />
     <Image Include="resources\icons\on.ico" />
     <Image Include="resources\icons\off.ico" />

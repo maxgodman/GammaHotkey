@@ -13,10 +13,10 @@
 #define IDC_STATIC				-1
 #endif // IDC_STATIC
 
-#define VER_FILEVERSION			0,2
-#define VER_FILEVERSION_STR		"0.2"
-#define VER_PRODUCTVERSION		0,2
-#define VER_PRODUCTVERSION_STR	"0.2"
+#define VER_FILEVERSION			0,2,0,0
+#define VER_FILEVERSION_STR		"0.2.0.0"
+#define VER_PRODUCTVERSION		0,2,0,0
+#define VER_PRODUCTVERSION_STR	"0.2.0.0"
 
 #define VER_COMPANYNAME			"Max Godman"
 #define VER_FILEDESCRIPTION		"Display gamma adjustment using hotkeys"
