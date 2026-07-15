@@ -8,6 +8,7 @@
 #include "PathUtils.h"
 #include "StringUtils.h"
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <map>
 #include <functional>
@@ -98,6 +99,16 @@ namespace ConfigManager
         }
     }
     
+    // Clamp gamma adjustment values to their valid ranges, protecting against a
+    // hand-edited or corrupted config that could otherwise produce an unreadable screen
+    // (e.g. Gamma=0 causes a divide that blacks out the display).
+    static void ClampProfileValues(Profile& profile)
+    {
+        profile.brightness = std::clamp(profile.brightness, -50, 50);
+        profile.contrast = std::clamp(profile.contrast, 0.5f, 1.5f);
+        profile.gamma = std::clamp(profile.gamma, 0.1f, 3.0f);
+    }
+
     // Sanitize profile name by removing problematic characters.
     static std::wstring SanitizeProfileName(const std::wstring& name)
     {
@@ -143,6 +154,7 @@ namespace ConfigManager
     {
         if (!profile.name.empty() && !ProfileExists(profile.name))
         {
+            ClampProfileValues(profile);
             App::profiles.push_back(profile);
         }
 
@@ -156,20 +168,33 @@ namespace ConfigManager
         
         App::profiles.clear();
         const std::wstring path = PathUtils::GetConfigPath();
-        std::wifstream ifs(path);
-        
+        std::ifstream ifs(path, std::ios::binary);
+
         if (!ifs)
         {
             return false; // Config file doesn't exist or can't be opened.
         }
 
-        std::wstring line;
+        std::string rawLine;
+        bool firstLine = true;
         Profile currentProfile;
         ConfigSection currentSection = ConfigSection::None;
 
-        // Iterate through each line of the config.
-        while (std::getline(ifs, line))
+        // Iterate through each line of the config. The file is stored as UTF-8.
+        while (std::getline(ifs, rawLine))
         {
+            // Strip a UTF-8 byte-order mark from the first line if present.
+            if (firstLine && rawLine.size() >= 3 &&
+                (unsigned char)rawLine[0] == 0xEF &&
+                (unsigned char)rawLine[1] == 0xBB &&
+                (unsigned char)rawLine[2] == 0xBF)
+            {
+                rawLine.erase(0, 3);
+            }
+            firstLine = false;
+
+            // Convert UTF-8 to wide for parsing. Trim also removes any trailing CR.
+            std::wstring line = StringUtils::UTF8ToWide(rawLine);
             StringUtils::Trim(line);
             if (line.empty() || line[0] == L';' || line[0] == L'#')
                 continue;
@@ -305,7 +330,16 @@ namespace ConfigManager
         {
             FinalizeProfile(currentProfile);
         }
-        
+
+        // Clamp simple-mode values in case the config was hand-edited or corrupted.
+        ClampProfileValues(App::simpleProfile);
+
+        // Validate the selected profile index against the profiles actually loaded.
+        if (App::selectedProfileIndex >= (int)App::profiles.size())
+            App::selectedProfileIndex = App::profiles.empty() ? -1 : (int)App::profiles.size() - 1;
+        if (App::selectedProfileIndex < -1)
+            App::selectedProfileIndex = -1;
+
         return true;
     }
     
@@ -315,52 +349,61 @@ namespace ConfigManager
         
         const std::filesystem::path finalPath = PathUtils::GetConfigPath();
         const std::filesystem::path tempPath = std::filesystem::path(finalPath).concat(L".tmp");
-        
-        // Write to temporary file first.
-        std::wofstream ofs(tempPath, std::ios::trunc);
-        if (!ofs)
-        {
-            return false;
-        }
+
+        // Build the file content as wide text, then encode to UTF-8. This preserves
+        // non-ASCII profile names, which a wide file stream with the default locale
+        // could not encode (silently failing the whole save).
+        std::wostringstream out;
 
         // Write configuration file header.
-        ofs << L"; Configuration file for GammaHotkey application.\n";
-        ofs << L"; Hotkey values are virtual-key codes (0 = none).\n\n";
+        out << L"; Configuration file for GammaHotkey application.\n";
+        out << L"; Hotkey values are virtual-key codes (0 = none).\n\n";
 
         // Save global hotkeys and settings.
-        ofs << L"[" << Keys::SECTION_GLOBALHOTKEYS << L"]\n";
-        ofs << Keys::TOGGLE_HOTKEY << L"=" << App::toggleHotkey << L"\n";
-        ofs << Keys::NEXTPROFILE_HOTKEY << L"=" << App::nextProfileHotkey << L"\n";
-        ofs << Keys::PREVIOUSPROFILE_HOTKEY << L"=" << App::previousProfileHotkey << L"\n";
-        ofs << Keys::LOOP_PROFILES << L"=" << (App::loopProfiles ? 1 : 0) << L"\n";
-        ofs << Keys::START_MINIMIZED << L"=" << (App::startMinimized ? 1 : 0) << L"\n";
-        ofs << Keys::MINIMIZE_TO_TRAY << L"=" << (App::minimizeToTray ? 1 : 0) << L"\n";
-        ofs << Keys::LAUNCH_ON_STARTUP << L"=" << (App::launchOnStartup ? 1 : 0) << L"\n";
-        ofs << Keys::SELECTED_DISPLAY << L"=" << App::selectedDisplayIndex << L"\n";
-        ofs << Keys::APPLY_ON_LAUNCH << L"=" << (App::applyProfileOnLaunch ? 1 : 0) << L"\n";
-        ofs << Keys::SELECTED_PROFILE_INDEX << L"=" << App::selectedProfileIndex << L"\n";
-        ofs << Keys::ADVANCED_MODE << L"=" << (App::state.IsAdvancedModeEnabled() ? 1 : 0) << L"\n\n";
+        out << L"[" << Keys::SECTION_GLOBALHOTKEYS << L"]\n";
+        out << Keys::TOGGLE_HOTKEY << L"=" << App::toggleHotkey << L"\n";
+        out << Keys::NEXTPROFILE_HOTKEY << L"=" << App::nextProfileHotkey << L"\n";
+        out << Keys::PREVIOUSPROFILE_HOTKEY << L"=" << App::previousProfileHotkey << L"\n";
+        out << Keys::LOOP_PROFILES << L"=" << (App::loopProfiles ? 1 : 0) << L"\n";
+        out << Keys::START_MINIMIZED << L"=" << (App::startMinimized ? 1 : 0) << L"\n";
+        out << Keys::MINIMIZE_TO_TRAY << L"=" << (App::minimizeToTray ? 1 : 0) << L"\n";
+        out << Keys::LAUNCH_ON_STARTUP << L"=" << (App::launchOnStartup ? 1 : 0) << L"\n";
+        out << Keys::SELECTED_DISPLAY << L"=" << App::selectedDisplayIndex << L"\n";
+        out << Keys::APPLY_ON_LAUNCH << L"=" << (App::applyProfileOnLaunch ? 1 : 0) << L"\n";
+        out << Keys::SELECTED_PROFILE_INDEX << L"=" << App::selectedProfileIndex << L"\n";
+        out << Keys::ADVANCED_MODE << L"=" << (App::state.IsAdvancedModeEnabled() ? 1 : 0) << L"\n\n";
 
         // Save simple profile.
-        ofs << L"[" << Keys::SECTION_SIMPLEPROFILE << L"]\n";
-        ofs << Keys::PROFILE_BRIGHTNESS << L"=" << App::simpleProfile.brightness << L"\n";
-        ofs << Keys::PROFILE_CONTRAST << L"=" << App::simpleProfile.contrast << L"\n";
-        ofs << Keys::PROFILE_GAMMA << L"=" << App::simpleProfile.gamma << L"\n\n";
+        out << L"[" << Keys::SECTION_SIMPLEPROFILE << L"]\n";
+        out << Keys::PROFILE_BRIGHTNESS << L"=" << App::simpleProfile.brightness << L"\n";
+        out << Keys::PROFILE_CONTRAST << L"=" << App::simpleProfile.contrast << L"\n";
+        out << Keys::PROFILE_GAMMA << L"=" << App::simpleProfile.gamma << L"\n\n";
 
         // Save profiles.
         for (const auto& profile : App::profiles)
         {
-            ofs << L"[" << Keys::SECTION_PROFILE << L"]\n";
-            ofs << Keys::PROFILE_NAME << L"=" << profile.name << L"\n";
-            ofs << Keys::PROFILE_BRIGHTNESS << L"=" << profile.brightness << L"\n";
-            ofs << Keys::PROFILE_CONTRAST << L"=" << profile.contrast << L"\n";
-            ofs << Keys::PROFILE_GAMMA << L"=" << profile.gamma << L"\n";
-            ofs << Keys::PROFILE_HOTKEY << L"=" << profile.hotkey << L"\n\n";
+            out << L"[" << Keys::SECTION_PROFILE << L"]\n";
+            out << Keys::PROFILE_NAME << L"=" << profile.name << L"\n";
+            out << Keys::PROFILE_BRIGHTNESS << L"=" << profile.brightness << L"\n";
+            out << Keys::PROFILE_CONTRAST << L"=" << profile.contrast << L"\n";
+            out << Keys::PROFILE_GAMMA << L"=" << profile.gamma << L"\n";
+            out << Keys::PROFILE_HOTKEY << L"=" << profile.hotkey << L"\n\n";
         }
-        
+
+        const std::string utf8 = StringUtils::WideToUTF8(out.str());
+
+        // Write to a temporary file first. Text mode translates '\n' to Windows CRLF; this
+        // is safe for UTF-8 because 0x0A never appears inside a multibyte UTF-8 sequence.
+        std::ofstream ofs(tempPath, std::ios::trunc);
+        if (!ofs)
+        {
+            return false;
+        }
+        ofs.write(utf8.data(), (std::streamsize)utf8.size());
+
         // Close the file before attempting to rename.
         ofs.close();
-        
+
         // Check if write was successful.
         if (ofs.fail())
         {
@@ -368,16 +411,12 @@ namespace ConfigManager
             return false;
         }
         
-        // Atomic replacement, rename temp file to final file.
+        // Atomic replacement: rename temp file over the final file.
+        // std::filesystem::rename replaces an existing destination on Windows, so we do
+        // not remove the original first (doing so would leave a window where a crash loses
+        // the config entirely).
         try
         {
-            // Remove existing config file first, if it exists.
-            if (std::filesystem::exists(finalPath))
-            {
-                std::filesystem::remove(finalPath);
-            }
-
-            // Rename the temp file, replacing the existing config file.
             std::filesystem::rename(tempPath, finalPath);
         }
         catch (const std::filesystem::filesystem_error&)
