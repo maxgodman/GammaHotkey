@@ -3,6 +3,7 @@
 #include "framework.h"
 #include "PathUtils.h"
 #include <shlobj.h>
+#include <filesystem>
 
 namespace PathUtils
 {
@@ -45,7 +46,14 @@ namespace PathUtils
         {
             return L"";
         }
-        
-        return std::wstring(startupPath) + L"\\GammaHotkey.lnk";
+
+        // Derive the shortcut name from the executable name so multiple renamed copies
+        // each get their own startup entry instead of overwriting a single shared
+        // "GammaHotkey.lnk".
+        std::wstring stem = std::filesystem::path(GetExecutablePath()).stem().wstring();
+        if (stem.empty())
+            stem = L"GammaHotkey";
+
+        return std::wstring(startupPath) + L"\\" + stem + L".lnk";
     }
 }
