@@ -242,7 +242,11 @@ void RenderBrightnessSlider(Profile& profile, const bool advancedMode)
     {
         App::state.SetGammaEnabled(true);
         GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        if (!advancedMode) ConfigManager::Save();  // Autosave in simple mode.
+    }
+    // Autosave in simple mode, but only once the drag/edit finishes (not every frame).
+    if (!advancedMode && ImGui::IsItemDeactivatedAfterEdit())
+    {
+        ConfigManager::Save();
     }
 
     if (ImGui::IsItemHovered())
@@ -255,6 +259,7 @@ void RenderBrightnessSlider(Profile& profile, const bool advancedMode)
         if (App::HasSelectedProfile())
         {
             profile.brightness = App::profiles[App::selectedProfileIndex].brightness;
+            App::state.SetGammaEnabled(true);
             GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
         }
     }
@@ -275,9 +280,13 @@ void RenderContrastSlider(Profile& profile, const bool advancedMode)
     {
         App::state.SetGammaEnabled(true);
         GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        if (!advancedMode) ConfigManager::Save();  // Autosave in simple mode.
     }
-    
+    // Autosave in simple mode, but only once the drag/edit finishes (not every frame).
+    if (!advancedMode && ImGui::IsItemDeactivatedAfterEdit())
+    {
+        ConfigManager::Save();
+    }
+
     if (ImGui::IsItemHovered())
     {
         ImGui::SetTooltip("Adjust screen contrast (0.5 to 1.5)");
@@ -309,9 +318,13 @@ void RenderGammaSlider(Profile& profile, const bool advancedMode)
     {
         App::state.SetGammaEnabled(true);
         GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        if (!advancedMode) ConfigManager::Save();  // Autosave in simple mode.
     }
-    
+    // Autosave in simple mode, but only once the drag/edit finishes (not every frame).
+    if (!advancedMode && ImGui::IsItemDeactivatedAfterEdit())
+    {
+        ConfigManager::Save();
+    }
+
     if (ImGui::IsItemHovered())
     {
         ImGui::SetTooltip("Adjust gamma curve (0.1 to 3.0)");
