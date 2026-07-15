@@ -13,10 +13,4 @@ namespace IconManager
      * @param[in] gammaEnabled true = green (on), false = red (off).
      */
     void UpdateAllIcons(const bool gammaEnabled);
-    
-    /**
-     * @brief Initialize icons on startup.
-     * Sets initial icon state based on gammaEnabled.
-     */
-    void Initialize(const HWND hwnd, const bool gammaEnabled);
 }

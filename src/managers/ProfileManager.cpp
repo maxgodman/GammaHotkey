@@ -19,8 +19,8 @@ namespace ProfileManager
     
     void ApplyByIndex(const int index)
     {
-        if (index >= App::profiles.size()) return;
-        
+        if (index < 0 || index >= (int)App::profiles.size()) return;
+
         App::workingProfile = App::profiles[index];
         App::selectedProfileIndex = index;
         GammaManager::ApplyProfile(App::workingProfile, App::selectedDisplayIndex);

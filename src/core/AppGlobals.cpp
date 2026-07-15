@@ -27,8 +27,7 @@ namespace App
     bool minimizeToTray = true; // Default on, the most common use-case.
     bool launchOnStartup = false;
     bool applyProfileOnLaunch = false;
-    std::wstring lastSelectedProfileName = L"";       
-    
+
     Profile simpleProfile;
         
     void SyncGammaToState()

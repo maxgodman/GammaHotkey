@@ -28,10 +28,4 @@ namespace IconManager
         //    SendMessage(App::mainWindow, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
         //}
     }
-    
-    void Initialize(const HWND hwnd, const bool gammaEnabled)
-    {
-        // Set initial icon state.
-        UpdateAllIcons(gammaEnabled);
-    }
 }

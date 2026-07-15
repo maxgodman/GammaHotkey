@@ -36,8 +36,7 @@ namespace App
     extern bool minimizeToTray;
     extern bool launchOnStartup;
     extern bool applyProfileOnLaunch;
-    extern std::wstring lastSelectedProfileName;
-    
+
     // Simple mode profile.
     extern Profile simpleProfile;
         
