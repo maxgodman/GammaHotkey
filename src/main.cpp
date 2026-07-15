@@ -323,6 +323,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
+    case WM_QUERYENDSESSION:
+        // Windows is asking whether it can end the session (shutdown/logoff/restart).
+        return TRUE; // Allow it.
+
+    case WM_ENDSESSION:
+        // The session is ending and the process may be terminated without WM_DESTROY.
+        // Persist settings and restore gamma now so nothing is lost.
+        if (wParam)
+        {
+            ConfigManager::Save();
+            GammaManager::ResetDisplay(App::selectedDisplayIndex);
+        }
+        return 0;
+
     case WM_CLOSE:
         // Check if we should minimize to tray instead of closing.
         if (App::minimizeToTray)
