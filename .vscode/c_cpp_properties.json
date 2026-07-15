@@ -1,0 +1,30 @@
+{
+    // IntelliSense configuration for the C/C++ extension (ms-vscode.cpptools).
+    // Mirrors the include paths and defines from GammaHotkey.vcxproj (Release x64).
+    "version": 4,
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/managers",
+                "${workspaceFolder}/src/ui",
+                "${workspaceFolder}/src/utils",
+                "${workspaceFolder}/resources",
+                "${workspaceFolder}/external/imgui",
+                "${workspaceFolder}/external/imgui/backends"
+            ],
+            "defines": [
+                "_WINDOWS",
+                "UNICODE",
+                "_UNICODE",
+                "NDEBUG"
+            ],
+            "windowsSdkVersion": "10.0.26100.0",
+            "intelliSenseMode": "windows-msvc-x64",
+            "cStandard": "c17",
+            "cppStandard": "c++20"
+        }
+    ]
+}

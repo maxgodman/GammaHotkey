@@ -1,0 +1,25 @@
+{
+    // Run/debug configurations. Debugging requires the "C/C++" extension (ms-vscode.cpptools),
+    // which provides the cppvsdbg (Visual Studio debugger) type.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/x64/Debug/GammaHotkey.exe",
+            "cwd": "${workspaceFolder}/x64/Debug",
+            "preLaunchTask": "Build Debug x64",
+            "console": "internalConsole"
+        },
+        {
+            "name": "Run Release (x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/x64/Release/GammaHotkey.exe",
+            "cwd": "${workspaceFolder}/x64/Release",
+            "preLaunchTask": "Build Release x64",
+            "console": "internalConsole"
+        }
+    ]
+}

@@ -1,0 +1,58 @@
+{
+    // Build tasks for VS Code. Run with "Terminal > Run Build Task..." (Ctrl+Shift+B).
+    // Errors and warnings appear in the Problems panel via the $msCompile matcher.
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Release x64",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}/scripts/build.ps1",
+                "-Configuration", "Release", "-Platform", "x64"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Debug x64",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}/scripts/build.ps1",
+                "-Configuration", "Debug", "-Platform", "x64"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Rebuild Release x64",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}/scripts/build.ps1",
+                "-Configuration", "Release", "-Platform", "x64", "-Target", "Rebuild"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}/scripts/build.ps1",
+                "-Configuration", "Release", "-Platform", "x64", "-Target", "Clean"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}
