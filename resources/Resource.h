@@ -9,6 +9,15 @@
 #define IDI_ON					107
 #define IDI_OFF					108
 
+// About dialog strings (string table; loaded at runtime via LoadStringW). Their values are
+// composed from the VER_* macros below in the .rc, so product name/version/description/
+// copyright are never duplicated here.
+#define IDS_ABOUT_TITLE			200
+#define IDS_ABOUT_VERSION		201
+#define IDS_ABOUT_DESCRIPTION	202
+#define IDS_ABOUT_COPYRIGHT		203
+#define IDS_ABOUT_OK			204
+
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
 #endif // IDC_STATIC

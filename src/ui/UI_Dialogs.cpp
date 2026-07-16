@@ -13,6 +13,16 @@
 #include "HotkeyManager.h"
 #include "StringUtils.h"
 
+extern HINSTANCE hInst;
+
+// Load a string-table entry and convert it to UTF-8 for ImGui.
+static std::string LoadUIString(const UINT id)
+{
+    WCHAR buffer[256] = L"";
+    const int len = LoadStringW(hInst, id, buffer, ARRAYSIZE(buffer));
+    return StringUtils::WideToUTF8(std::wstring(buffer, len));
+}
+
 void RenderHotkeyCaptureDialog()
 {
     // Hotkey capture popup.
@@ -97,31 +107,35 @@ void RenderHotkeyCaptureDialog()
 
 void RenderAboutDialog()
 {
-    // @TODO: Store the text content used here in resources?
+    // Displayed text lives in the string table (IDS_ABOUT_*), whose values are composed from
+    // the VER_* macros in the .rc, so nothing is duplicated here. The title doubles as the
+    // popup's ImGui ID, so load it once and pass the same bytes to OpenPopup and BeginPopupModal.
+    const std::string title = LoadUIString(IDS_ABOUT_TITLE);
+
     if (UI::state.showAboutDialog)
     {
-        ImGui::OpenPopup("About " VER_PRODUCTNAME);
+        ImGui::OpenPopup(title.c_str());
         UI::state.showAboutDialog = false;
     }
-    
-    if (ImGui::BeginPopupModal("About " VER_PRODUCTNAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+
+    if (ImGui::BeginPopupModal(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::Text("Version " VER_PRODUCTVERSION_STR);
+        ImGui::Text("%s", LoadUIString(IDS_ABOUT_VERSION).c_str());
         ImGui::Separator();
         ImGui::Spacing();
-        ImGui::Text(VER_FILEDESCRIPTION);
+        ImGui::Text("%s", LoadUIString(IDS_ABOUT_DESCRIPTION).c_str());
         ImGui::Separator();
         ImGui::Spacing();
-        ImGui::Text(VER_LEGALCOPYRIGHT);
+        ImGui::Text("%s", LoadUIString(IDS_ABOUT_COPYRIGHT).c_str());
         ImGui::Spacing();
-        
+
         const float buttonWidth = 120.0f;
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - buttonWidth) * 0.5f);
-        if (ImGui::Button("OK", ImVec2(buttonWidth, 0)))
+        if (ImGui::Button(LoadUIString(IDS_ABOUT_OK).c_str(), ImVec2(buttonWidth, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
-        
+
         ImGui::EndPopup();
     }
 }
