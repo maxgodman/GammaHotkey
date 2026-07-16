@@ -17,7 +17,7 @@
 /**
  * @brief Helper for read-only hotkey display.
  */
-static void RenderHotkeyDisplay(const char* label, const char* id, UINT hotkey, int captureType)
+static void RenderHotkeyDisplay(const char* label, const char* id, UINT hotkey, HotkeyCapture captureType)
 {
     const float labelWidth = 135.0f;
     const float buttonWidth = 50.0f;

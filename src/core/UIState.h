@@ -7,6 +7,8 @@
 #include <Windows.h>
 #include <string>
 
+#include "GammaHotkeyTypes.h"
+
 class UIState
 {
 public:
@@ -27,7 +29,7 @@ public:
     int renamingProfileIndex = -1;
     bool renameNeedsFocus = false;
 
-    int capturingHotkeyType = -1; // @TODO: Find all usage of this and handle this better, it is hardcoded and fragile.
+    HotkeyCapture capturingHotkeyType = HotkeyCapture::NONE;
     bool hotkeySuspended = false;
     UINT conflictingHotkey = 0;
     std::string conflictDescription = "";

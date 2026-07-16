@@ -79,6 +79,8 @@ static UINT GetHotkeyForCaptureTarget()
         if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
             return App::profiles[App::selectedProfileIndex].hotkey;
         return App::workingProfile.hotkey;
+    case HotkeyCapture::NONE:
+        break;
     }
     return 0;
 }
@@ -110,6 +112,8 @@ void SetHotkeyForCaptureTarget(const UINT vk)
         else
             strncpy_s(UI::state.profileHotkeyBuffer, sizeof(UI::state.profileHotkeyBuffer),
                       StringUtils::WideToUTF8(StringUtils::VkToName(vk)).c_str(), _TRUNCATE);
+        break;
+    case HotkeyCapture::NONE:
         break;
     }
 }

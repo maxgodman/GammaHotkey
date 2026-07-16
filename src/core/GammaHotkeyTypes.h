@@ -40,6 +40,22 @@ namespace HotkeyIDs
     constexpr int PROFILE_BASE = 1000;
 }
 
+/**
+ * @brief Identifies which action the hotkey-capture dialog is currently binding.
+ *
+ * Stored in UIState::capturingHotkeyType. NONE means the app is not capturing.
+ * This is transient UI state and is never persisted, so the underlying values are
+ * unspecified; switch on the enumerators, never on raw integers.
+ */
+enum class HotkeyCapture
+{
+    NONE,
+    TOGGLE,
+    PREVIOUS_PROFILE,
+    NEXT_PROFILE,
+    PROFILE,
+};
+
 namespace SystemTrayIDs
 {
     constexpr UINT ID_ICON = 1;
