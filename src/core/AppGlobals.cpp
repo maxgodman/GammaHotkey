@@ -5,6 +5,10 @@
 #include "GammaManager.h"
 #include <cassert>
 
+// Forward declaration, implemented in UIGlobals.cpp. Declared here rather than including the
+// header to keep the App layer loosely coupled to the UI layer, matching AppState.cpp.
+namespace UI { void SyncUIToState(); }
+
 namespace App
 {
     AppState state;
@@ -51,6 +55,14 @@ namespace App
         {
             GammaManager::ResetDisplay(selectedDisplayIndex);
         }
+    }
+
+    void ToggleGamma()
+    {
+        // Flip on/off, re-apply gamma for the new state, and refresh the UI.
+        state.SetGammaEnabled(!state.IsGammaEnabled());
+        SyncGammaToState();
+        UI::SyncUIToState();
     }
 
     int GetDesiredWindowSizeX()

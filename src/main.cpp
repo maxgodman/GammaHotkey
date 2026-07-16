@@ -623,9 +623,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             ShowMainWindow(hWnd);
             return 0;
         case SystemTrayIDs::ID_TOGGLE:
-            // Toggle gamma on/off, handle it the same as the toggle hotkey.
-            // @TODO: This is a bit of a hack, can we handle this better?
-            HotkeyManager::HandleHotkey(HotkeyIDs::TOGGLE);
+            App::ToggleGamma();
             return 0;
         case SystemTrayIDs::ID_EXIT:
             DestroyWindow(hWnd);

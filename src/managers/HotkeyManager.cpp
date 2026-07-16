@@ -84,10 +84,7 @@ namespace HotkeyManager
 
         if (hotkeyId == HotkeyIDs::TOGGLE)
         {
-            // Update state and sync.
-            App::state.SetGammaEnabled(!App::state.IsGammaEnabled());
-            App::SyncGammaToState();
-            UI::SyncUIToState();
+            App::ToggleGamma();
         }
         else if (hotkeyId == HotkeyIDs::PREVIOUS_PROFILE)
         {

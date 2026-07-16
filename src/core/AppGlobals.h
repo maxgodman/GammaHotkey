@@ -53,6 +53,14 @@ namespace App
     void SyncGammaToState();
 
     /**
+     * @brief Toggle gamma on/off, apply the change, and refresh the UI.
+     *
+     * The single shared toggle action used by both the toggle hotkey and the tray menu
+     * "Toggle" item, so the two paths behave identically.
+     */
+    void ToggleGamma();
+
+    /**
      * @brief Gets the desired window size X (width) of the app.
      */
     int GetDesiredWindowSizeX();
