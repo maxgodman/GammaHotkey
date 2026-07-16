@@ -15,11 +15,21 @@ void RenderAllDialogs();
  */
 void RenderMainUI()
 {
-    // Handle mode change with proper window resize.
+    // The mode toggle button (RenderModeToggleButton) never switches modes inline: clicking it only
+    // records the request (targetAdvancedMode) and sets modeJustChanged. The switch is applied here,
+    // at the very top of the next frame's UI build - after NewFrame() but before any ImGui window is
+    // begun. Deferring it to this point is deliberate and load-bearing:
+    //
+    //   - Switching modes changes the window (and swap-chain) size. SyncWindowSizeToState() calls
+    //     SetWindowPos, which delivers WM_SIZE synchronously, and WM_SIZE resizes the DX11 swap-chain
+    //     buffers (ImGuiRenderer::OnResize). Running that from the button handler would recreate the
+    //     render target deep inside the previous mode's window hierarchy, mid-frame.
+    //   - Running it here instead, the resize happens while no ImGui window is open and no draw data
+    //     has been emitted, so recreating the render target is safe and exactly one mode's layout (the
+    //     new one) is built for the frame. WM_SIZE must not render (a nested NewFrame() would assert);
+    //     it only resizes the buffers - see the WM_SIZE handler in main.cpp.
     if (UI::state.modeJustChanged)
     {
-        // @TODO:   Refactor this. Ended up with this when battling unknown issues using imgui and switching between simple/advanced.
-        //          UI rendering should be decoupled from this, but need to investigate how to handle the switch properly.
         App::state.SetAdvancedModeEnabled(UI::state.targetAdvancedMode);
         ConfigManager::Save();
         
@@ -27,12 +37,15 @@ void RenderMainUI()
 
         App::SyncWindowSizeToState();
         
-        // Skip popup rendering this frame, ImGui state is in transition.
+        // Render the new mode's UI this frame so the swap chain is not presented blank, but skip the
+        // dialogs: NewFrame() captured io.DisplaySize before the resize above, so it is momentarily
+        // stale and popups auto-center off it. The next frame renders everything at the settled size;
+        // a pending dialog request is a latched one-shot flag (see UIState.h), so nothing is lost.
         if (App::state.IsAdvancedModeEnabled())
             RenderAdvancedUI();
         else
             RenderSimpleUI();
-        return;  // Don't render popups this frame.
+        return;
     }
     
     // Render appropriate UI (this creates the ImGui window context).
