@@ -35,24 +35,34 @@ static void ToggleMaximize(HWND hwnd)
 }
 
 /**
- * @brief Check if hotkey is already in use.
+ * @brief Check whether a key is already bound to an action other than the one being captured.
  * @param vk Virtual key to check.
- * @return Returns conflicting hotkey as friendly string, empty if no conflict.
+ * @param captureTarget The action currently being (re)bound; its own existing binding is ignored.
+ * @return Friendly name of the conflicting action, or empty if there is no conflict.
+ *
+ * Skipping @p captureTarget is what lets a hotkey be rebound to the key it already has without
+ * being reported as conflicting with itself: the action's current binding is not a conflict for
+ * that same action, only for a different one.
  */
-static std::string CheckHotkeyConflict(const UINT vk)
+static std::string CheckHotkeyConflict(const UINT vk, const HotkeyCapture captureTarget)
 {
-    // @TODO:   This isn't great, handle this better.
-    //          Note this can't tell which action is being captured; ApplyHotkeyChange() handles
-    //          the "key is already bound to the target action" case before calling this.
-
     if (vk == 0) return "";
-    
-    if (App::toggleHotkey == vk) return "Toggle On/Off";
-    if (App::previousProfileHotkey == vk) return "Previous Profile";
-    if (App::nextProfileHotkey == vk) return "Next Profile";
-    
+
+    if (captureTarget != HotkeyCapture::TOGGLE && App::toggleHotkey == vk)
+        return "Toggle On/Off";
+    if (captureTarget != HotkeyCapture::PREVIOUS_PROFILE && App::previousProfileHotkey == vk)
+        return "Previous Profile";
+    if (captureTarget != HotkeyCapture::NEXT_PROFILE && App::nextProfileHotkey == vk)
+        return "Next Profile";
+
     for (size_t i = 0; i < App::profiles.size(); ++i)
     {
+        // When rebinding an existing profile's hotkey, that same profile's current binding
+        // is not a conflict. A brand-new profile (selectedProfileIndex out of range) isn't in
+        // this array yet, so nothing is skipped and every profile is checked.
+        if (captureTarget == HotkeyCapture::PROFILE && (int)i == App::selectedProfileIndex)
+            continue;
+
         if (App::profiles[i].hotkey == vk)
         {
             return "Profile: " + StringUtils::WideToUTF8(App::profiles[i].name);
@@ -60,29 +70,6 @@ static std::string CheckHotkeyConflict(const UINT vk)
     }
 
     return ""; // No conflict.
-}
-
-/**
- * @brief Get the hotkey currently bound to the action being captured.
- * @return Virtual-key code, or 0 if none is bound.
- */
-static UINT GetHotkeyForCaptureTarget()
-{
-    switch (UI::state.capturingHotkeyType)
-    {
-    case HotkeyCapture::TOGGLE:           return App::toggleHotkey;
-    case HotkeyCapture::PREVIOUS_PROFILE: return App::previousProfileHotkey;
-    case HotkeyCapture::NEXT_PROFILE:     return App::nextProfileHotkey;
-    case HotkeyCapture::PROFILE:
-        // An existing profile's live hotkey is in the profiles array; a profile that
-        // hasn't been saved yet only exists in workingProfile.
-        if (App::selectedProfileIndex >= 0 && App::selectedProfileIndex < (int)App::profiles.size())
-            return App::profiles[App::selectedProfileIndex].hotkey;
-        return App::workingProfile.hotkey;
-    case HotkeyCapture::NONE:
-        break;
-    }
-    return 0;
 }
 
 void SetHotkeyForCaptureTarget(const UINT vk)
@@ -123,17 +110,9 @@ void SetHotkeyForCaptureTarget(const UINT vk)
  */
 static void ApplyHotkeyChange(const UINT vk)
 {
-    // Re-binding an action to the key it already has is a no-op: close the capture
-    // popup as if it was cancelled, rather than reporting the key as a conflict.
-    if (vk != 0 && vk == GetHotkeyForCaptureTarget())
-    {
-        UI::state.capturingHotkeyType = HotkeyCapture::NONE;
-        UI::state.closeCapturePopup = true;
-        return;
-    }
-
-    // Check for conflicts.
-    const std::string conflict = CheckHotkeyConflict(vk);
+    // Check for conflicts with a *different* action. Rebinding the action being captured
+    // to the key it already has is not a conflict, so it applies silently below.
+    const std::string conflict = CheckHotkeyConflict(vk, UI::state.capturingHotkeyType);
     if (!conflict.empty())
     {
         UI::state.showHotkeyConflict = true;
