@@ -14,6 +14,7 @@
 #include "HotkeyManager.h"
 #include "StringUtils.h"
 #include <string>
+#include <type_traits>
 
 /**
  * @brief Check if the specified window is maximized.
@@ -244,12 +245,37 @@ void RenderOptionsCheckboxes()
     ImGui::PopStyleVar();
 }
 
-// @TODO: These three sliders are mostly duplicate code. Consolidate?
-void RenderBrightnessSlider(Profile& profile, const bool advancedMode)
+// The brightness/contrast/gamma sliders differ only in label, value type (int vs float),
+// range, simple-mode reset target, and tooltip; the rest (apply-on-change, deferred autosave,
+// advanced-mode double-click restore-from-saved, simple-mode double-click reset-to-default) is
+// identical. This shared helper carries all of it; the three public functions are thin wrappers.
+//
+// @p member selects the Profile field so the same pointer is reused to read/write @p profile and
+// to read the saved profile for the advanced-mode restore, keeping every id and code path exactly
+// as the three hand-written versions were.
+template <typename T>
+static void RenderProfileSlider(Profile& profile, const bool advancedMode, const char* label,
+                                T Profile::* member, const T minValue, const T maxValue,
+                                const T defaultValue, const char* tooltip)
 {
-    ImGui::Text("Brightness: %d", profile.brightness);
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderInt("##Brightness", &profile.brightness, -50, 50))
+    T& value = profile.*member;
+    const std::string sliderId = std::string("##") + label;
+
+    bool changed;
+    if constexpr (std::is_integral_v<T>)
+    {
+        ImGui::Text("%s: %d", label, value);
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        changed = ImGui::SliderInt(sliderId.c_str(), &value, minValue, maxValue);
+    }
+    else
+    {
+        ImGui::Text("%s: %.3f", label, value);
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        changed = ImGui::SliderFloat(sliderId.c_str(), &value, minValue, maxValue, "%.3f");
+    }
+
+    if (changed)
     {
         App::state.SetGammaEnabled(true);
         GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
@@ -262,101 +288,43 @@ void RenderBrightnessSlider(Profile& profile, const bool advancedMode)
 
     if (ImGui::IsItemHovered())
     {
-        ImGui::SetTooltip("Adjust screen brightness (-50 to 50)");
+        ImGui::SetTooltip("%s", tooltip);
     }
-    
+
     if (advancedMode && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
     {
         if (App::HasSelectedProfile())
         {
-            profile.brightness = App::profiles[App::selectedProfileIndex].brightness;
+            value = App::profiles[App::selectedProfileIndex].*member;
             App::state.SetGammaEnabled(true);
             GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
         }
     }
     else if (!advancedMode && ImGui::IsItemActive() && ImGui::IsMouseDoubleClicked(0))
     {
-        profile.brightness = 0;
+        value = defaultValue;
         App::state.SetGammaEnabled(true);
         GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
         ConfigManager::Save();
     }
+}
+
+void RenderBrightnessSlider(Profile& profile, const bool advancedMode)
+{
+    RenderProfileSlider<int>(profile, advancedMode, "Brightness", &Profile::brightness,
+                             -50, 50, 0, "Adjust screen brightness (-50 to 50)");
 }
 
 void RenderContrastSlider(Profile& profile, const bool advancedMode)
 {
-    ImGui::Text("Contrast: %.3f", profile.contrast);
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderFloat("##Contrast", &profile.contrast, 0.5f, 1.5f, "%.3f"))
-    {
-        App::state.SetGammaEnabled(true);
-        GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-    }
-    // Autosave in simple mode, but only once the drag/edit finishes (not every frame).
-    if (!advancedMode && ImGui::IsItemDeactivatedAfterEdit())
-    {
-        ConfigManager::Save();
-    }
-
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::SetTooltip("Adjust screen contrast (0.5 to 1.5)");
-    }
-    
-    if (advancedMode && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-    {
-        if (App::HasSelectedProfile())
-        {
-            profile.contrast = App::profiles[App::selectedProfileIndex].contrast;
-            App::state.SetGammaEnabled(true);
-            GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        }
-    }
-    else if (!advancedMode && ImGui::IsItemActive() && ImGui::IsMouseDoubleClicked(0))
-    {
-        profile.contrast = 1.0f;
-        App::state.SetGammaEnabled(true);
-        GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        ConfigManager::Save();
-    }
+    RenderProfileSlider<float>(profile, advancedMode, "Contrast", &Profile::contrast,
+                               0.5f, 1.5f, 1.0f, "Adjust screen contrast (0.5 to 1.5)");
 }
 
 void RenderGammaSlider(Profile& profile, const bool advancedMode)
 {
-    ImGui::Text("Gamma: %.3f", profile.gamma);
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderFloat("##Gamma", &profile.gamma, 0.1f, 3.0f, "%.3f"))
-    {
-        App::state.SetGammaEnabled(true);
-        GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-    }
-    // Autosave in simple mode, but only once the drag/edit finishes (not every frame).
-    if (!advancedMode && ImGui::IsItemDeactivatedAfterEdit())
-    {
-        ConfigManager::Save();
-    }
-
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::SetTooltip("Adjust gamma curve (0.1 to 3.0)");
-    }
-    
-    if (advancedMode && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-    {
-        if (App::HasSelectedProfile())
-        {
-            profile.gamma = App::profiles[App::selectedProfileIndex].gamma;
-            App::state.SetGammaEnabled(true);
-            GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        }
-    }
-    else if (!advancedMode && ImGui::IsItemActive() && ImGui::IsMouseDoubleClicked(0))
-    {
-        profile.gamma = 1.0f;
-        App::state.SetGammaEnabled(true);
-        GammaManager::ApplyProfile(profile, App::selectedDisplayIndex);
-        ConfigManager::Save();
-    }
+    RenderProfileSlider<float>(profile, advancedMode, "Gamma", &Profile::gamma,
+                               0.1f, 3.0f, 1.0f, "Adjust gamma curve (0.1 to 3.0)");
 }
 
 void RenderModeToggleButton()
