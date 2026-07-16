@@ -46,9 +46,14 @@ bool ImGuiRenderer::Initialize(const HWND hwnd)
 
     // Apply DPI scaling after style, so it scales everything.
     const UINT dpi = GetDpiForWindow(hwnd);
-    float scale = dpi / 96.0f;  // 96 DPI is 100% scaling.
-    ImGui::GetStyle().ScaleAllSizes(scale);
-    io.FontGlobalScale = scale;
+    const float scale = dpi / 96.0f;  // 96 DPI is 100% scaling.
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(scale);   // Scale style metrics (paddings/spacings/borders).
+    // Rasterize the font crisp at the actual DPI. FontScaleDpi is ImGui 1.92's per-monitor
+    // font scale factor; the DX11 backend advertises ImGuiBackendFlags_RendererHasTextures,
+    // so the atlas is re-baked at the requested size automatically. Not io.FontGlobalScale:
+    // that only stretches the 13px atlas and blurs above 100%.
+    style.FontScaleDpi = scale;
 
     m_initialized = true;
     return true;
@@ -116,11 +121,11 @@ void ImGuiRenderer::OnDpiChanged(const UINT newDpi)
     // This ensures clean scaling without accumulation.
     style = ImGuiStyle();  // Reset to default.
     ApplyImGuiStyle();     // Reapply custom colors/settings.
-    style.ScaleAllSizes(newScale);  // Scale everything.
-    
-    // Update font scale.
-    ImGuiIO& io = ImGui::GetIO();
-    io.FontGlobalScale = newScale;
+    style.ScaleAllSizes(newScale);  // Scale style metrics.
+
+    // Re-rasterize the font at the new DPI (see Initialize for why FontScaleDpi, not
+    // io.FontGlobalScale). The reset above cleared it back to 1.0, so set it again.
+    style.FontScaleDpi = newScale;
 }
 
 bool ImGuiRenderer::CreateDeviceD3D(const HWND hwnd)
