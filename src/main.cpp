@@ -46,11 +46,14 @@
 #include "ImGui_Integration.h"
 #include "UI_Shared.h"
 #include <windowsx.h>
+#include <uxtheme.h>  // MARGINS.
+#include <dwmapi.h>
 
 // Explicitly link libraries.
 // This seems to be handled automatically in VS by CoreLibraryDependencies in the project properties.
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "dwmapi.lib")
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool EnforceSingleInstance();
@@ -88,7 +91,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     hInst = hInstance;
 
     const HWND hWnd = CreateWindowW(szWindowClass, szTitle,
-        WS_POPUP | WS_THICKFRAME,  // Borderless but resizable.
+        // Borderless (WS_POPUP) but resizable (WS_THICKFRAME); WM_NCCALCSIZE strips the visible frame
+        // so the ImGui title bar owns the window. The sys-menu/min/max box styles add no chrome
+        // without WS_CAPTION but re-enable OS behaviors: WS_MAXIMIZEBOX is required for Aero Snap, and
+        // the trio restores the min/max/snap animations and the taskbar thumbnail menu.
+        WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, // Created with zero window size, updated to desired size later.
         nullptr, nullptr, hInstance, nullptr);
 
@@ -251,6 +258,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         // We currently only ever expect one window to be created, so we assume this is the main window.
         App::mainWindow = hWnd;
+
+        // WM_NCCALCSIZE removed the standard frame so the ImGui title bar owns the window, which also
+        // dropped the DWM drop shadow. Extending the frame one pixel back into the client area makes
+        // DWM render the standard shadow (and cooperate with snap animations) again; the opaque ImGui
+        // client paints over that one-pixel sliver so it is never visible.
+        const MARGINS shadowMargins = { 0, 0, 0, 1 };
+        DwmExtendFrameIntoClientArea(hWnd, &shadowMargins);
+
+        // Prefer rounded corners on Windows 11. DWMWA_WINDOW_CORNER_PREFERENCE (33) and DWMWCP_ROUND
+        // (2) live behind a newer NTDDI_VERSION than this project targets (see targetver.h), so pass
+        // the numeric values directly; DwmSetWindowAttribute returns an ignored error where unsupported.
+        const DWORD cornerPreferenceRound = 2; // DWMWCP_ROUND
+        DwmSetWindowAttribute(hWnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */,
+            &cornerPreferenceRound, sizeof(cornerPreferenceRound));
 
         // Initialize ImGui renderer for the UI.
         g_ImGuiRenderer = new ImGuiRenderer();
@@ -508,40 +529,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_NCHITTEST:
     {
-        // Check if maximized, no resize handles when maximized.
-        const LONG windowStyle = GetWindowLong(hWnd, GWL_STYLE);
-        const bool maximized = (windowStyle & WS_MAXIMIZE) != 0;
-
-        if (maximized)
-        {
-            return HTCLIENT; // When maximized, return client area.
-        }
-
-        // First, let the default handle it.
+        // Resolve the default first. With the frame removed by WM_NCCALCSIZE this is HTCLIENT almost
+        // everywhere; if DefWindowProc does report a frame region, honor it unchanged.
         const LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
+        if (hit != HTCLIENT)
+            return hit;
 
-        // If default returned client area, check if we are on a border for resizing.
-        if (hit == HTCLIENT)
+        POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        ScreenToClient(hWnd, &point);
+
+        RECT rect;
+        GetClientRect(hWnd, &rect);
+
+        const bool maximized = (GetWindowLong(hWnd, GWL_STYLE) & WS_MAXIMIZE) != 0;
+
+        // Resize handles along the borders, but never on a maximized window (which cannot be
+        // resized). These are tested before the caption so the top edge still resizes rather than
+        // dragging.
+        if (!maximized)
         {
-            POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-            ScreenToClient(hWnd, &point);
-
-            RECT rect;
-            GetClientRect(hWnd, &rect);
-
-            // Border thickness for resize handles.
             const int borderWidth = GetSystemMetrics(SM_CXSIZEFRAME) +
                 GetSystemMetrics(SM_CXPADDEDBORDER);
             const int borderHeight = GetSystemMetrics(SM_CYSIZEFRAME) +
                 GetSystemMetrics(SM_CXPADDEDBORDER);
 
-            // Check edges for resize cursors.
-            bool onLeft = point.x < borderWidth;
-            bool onRight = point.x >= rect.right - borderWidth;
-            bool onTop = point.y < borderHeight;
-            bool onBottom = point.y >= rect.bottom - borderHeight;
+            const bool onLeft = point.x < borderWidth;
+            const bool onRight = point.x >= rect.right - borderWidth;
+            const bool onTop = point.y < borderHeight;
+            const bool onBottom = point.y >= rect.bottom - borderHeight;
 
-            // Return appropriate hit test for resize handles.
             if (onTop && onLeft) return HTTOPLEFT;
             if (onTop && onRight) return HTTOPRIGHT;
             if (onBottom && onLeft) return HTBOTTOMLEFT;
@@ -552,7 +568,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (onBottom) return HTBOTTOM;
         }
 
-        return hit;
+        // The drag strip reports HTCAPTION, so Windows runs its own move loop: the source of Aero
+        // Snap, the taskbar peek (the window can no longer be dragged fully behind the taskbar),
+        // window-shake and drag-off-maximize, none of which a self-managed SetWindowPos drag could
+        // provide. The button cluster right of dragRight stays HTCLIENT so ImGui keeps its clicks;
+        // this holds when maximized too, so the buttons work and the caption can still be grabbed to
+        // drag the window off its maximized state. Until RenderTitleBar publishes regions (valid is
+        // false), the whole client stays HTCLIENT.
+        if (UI::state.titleBar.valid &&
+            point.y >= 0 && point.y < UI::state.titleBar.captionBottom &&
+            point.x >= 0 && point.x < UI::state.titleBar.dragRight)
+        {
+            return HTCAPTION;
+        }
+
+        return HTCLIENT;
     }
 
     case WM_SIZING:

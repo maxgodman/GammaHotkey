@@ -458,52 +458,15 @@ void RenderTitleBar()
     const std::string statusText = StringUtils::WideToUTF8(statusTextWide);
     ImGui::Text("%s", statusText.c_str());
 
-    // Make title bar draggable.
-    // We use cursor position and offset to manage the drag.
-    // @TODO:   Is this the proper way to do this? I tried using a delta position update with mixed results.
-    //          This seems to work fine but uncertain if this is best practice.
-    const float draggableWidth = buttonX - titleBarMin.x;
-    ImGui::SetCursorScreenPos(titleBarMin);
-    ImGui::InvisibleButton("##titleDrag", ImVec2(draggableWidth, UIConstants::TITLEBAR_HEIGHT));
-
-    // Double-click to maximize/restore.
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-    {
-        ToggleMaximize(App::mainWindow);
-    }
-
-    static bool dragging = false;
-    static POINT dragOffset = { 0, 0 };
-
-    if (!maximized && ImGui::IsItemActive())
-    {
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-        {
-            // Just started dragging, record offset.
-            RECT rect;
-            GetWindowRect(App::mainWindow, &rect);
-            POINT cursor;
-            GetCursorPos(&cursor);
-            dragOffset.x = cursor.x - rect.left;
-            dragOffset.y = cursor.y - rect.top;
-            dragging = true;
-        }
-
-        if (dragging)
-        {
-            // Update window position to follow cursor.
-            POINT cursor;
-            GetCursorPos(&cursor);
-            SetWindowPos(App::mainWindow, nullptr,
-                cursor.x - dragOffset.x,
-                cursor.y - dragOffset.y,
-                0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-        }
-    }
-    else
-    {
-        dragging = false;
-    }
+    // Publish the draggable region for WM_NCHITTEST to report as HTCAPTION, handing the drag to the
+    // OS move loop. That restores Aero Snap, the taskbar peek (the window can no longer be stranded
+    // behind the taskbar), window-shake, and double-click/drag-off maximize, so none of those need
+    // handling here. The strip runs from the left edge to buttonX; the button cluster to its right
+    // stays HTCLIENT so ImGui keeps its clicks. buttonX and windowPos are ImGui screen coordinates;
+    // for the main window (pinned at 0,0) those equal the client coordinates WM_NCHITTEST uses.
+    UI::state.titleBar.captionBottom = (int)UIConstants::TITLEBAR_HEIGHT;
+    UI::state.titleBar.dragRight = (int)(buttonX - windowPos.x);
+    UI::state.titleBar.valid = true;
 }
 
 void ClearConflictingHotkey(const UINT vk)

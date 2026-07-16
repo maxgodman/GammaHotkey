@@ -40,4 +40,18 @@ public:
     // Mode switching.
     bool modeJustChanged = false;
     bool targetAdvancedMode = false;
+
+    // Title-bar hit-test regions, published by RenderTitleBar each frame and read by WM_NCHITTEST,
+    // which runs outside the ImGui render pass and so cannot query widget rects directly. Coordinates
+    // are client-space pixels; for the main window (pinned at 0,0, sized to the client area) those
+    // equal ImGui screen coordinates. Client x in [0, dragRight) is the draggable caption (reported
+    // HTCAPTION, so Windows runs the move loop behind Aero Snap, taskbar peek, window-shake and
+    // drag-off-maximize); [dragRight, width) is the button cluster (HTCLIENT, so ImGui gets the clicks).
+    struct TitleBarHitRegions
+    {
+        bool valid = false;    // Stays false until the first frame publishes real values.
+        int captionBottom = 0; // Caption band spans client y in [0, captionBottom).
+        int dragRight = 0;     // Draggable caption spans client x in [0, dragRight).
+    };
+    TitleBarHitRegions titleBar;
 };
