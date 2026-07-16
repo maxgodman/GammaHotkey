@@ -291,11 +291,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // Check startup shortcut status.
         App::launchOnStartup = StartupManager::IsEnabled();
 
-        // Initialize lastRamp, we have not applied a ramp yet, and we are assumed in a default state right now.
-        // @TODO:   We could use GetDeviceGammaRamp() to populate this, allowing us to update the graph with the current ramp.
-        //          If the user has a gamma ramp set already for whatever reason this could be helpful, for now this is unnecessary.
-        for (int i = 0; i < GammaConstants::RAMP_SIZE; ++i)
-            App::state.lastRamp[i] = i / 255.0f;
+        // Seed lastRamp from the display's current gamma ramp so the curve graph reflects reality on
+        // launch, in case another tool (or a prior session) left a non-default ramp applied. When the
+        // target is "all displays" (-1) we read display 0 as representative, mirroring how GammaManager
+        // opens a DC via CreateDC on the device name. GetDeviceGammaRamp gives WORD[3][256] per channel
+        // (0-65535); we average the channels into the single 0..1 curve the preview consumes, inverting
+        // how BuildGammaRamp stores it (identical channels round-trip exactly). Falls back to the linear
+        // identity if there is no display or the read fails.
+        bool seededFromDevice = false;
+        if (!App::displays.empty())
+        {
+            const int readIndex = (App::selectedDisplayIndex >= 0) ? App::selectedDisplayIndex : 0;
+            const HDC hdc = CreateDC(NULL, App::displays[readIndex].deviceName.c_str(), NULL, NULL);
+            if (hdc)
+            {
+                WORD currentRamp[3][GammaConstants::RAMP_SIZE];
+                if (GetDeviceGammaRamp(hdc, currentRamp))
+                {
+                    for (int index = 0; index < GammaConstants::RAMP_SIZE; ++index)
+                    {
+                        const float channelAverage = (currentRamp[0][index] + currentRamp[1][index] + currentRamp[2][index]) / 3.0f;
+                        App::state.lastRamp[index] = channelAverage / GammaConstants::RAMP_MAX;
+                    }
+                    seededFromDevice = true;
+                }
+                DeleteDC(hdc);
+            }
+        }
+
+        if (!seededFromDevice)
+        {
+            // No display available or the read failed, assume the default (linear) state.
+            for (int index = 0; index < GammaConstants::RAMP_SIZE; ++index)
+                App::state.lastRamp[index] = index / 255.0f;
+        }
 
         // Add system tray icon, do this early enough to later receive an update as part of initialization.
         SystemTrayManager::AddIcon(hWnd);
