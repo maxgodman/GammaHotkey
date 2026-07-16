@@ -348,10 +348,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_ENDSESSION:
         // The session is ending and the process may be terminated without WM_DESTROY.
-        // Persist settings and restore gamma now so nothing is lost.
+        // Persist settings and restore gamma now so nothing is lost. Guard the save on
+        // IsConfigInitialized for the same reason as WM_DESTROY: never write in-memory
+        // defaults over the user's config if it was somehow never loaded.
         if (wParam)
         {
-            ConfigManager::Save();
+            if (App::state.IsConfigInitialized())
+                ConfigManager::Save();
             GammaManager::ResetDisplay(App::selectedDisplayIndex);
         }
         return 0;
@@ -367,13 +370,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hWnd, message, wParam, lParam);
 
     case WM_DESTROY:
-        // @TODO:   Can we handle things better if the process is killed?
-        //          Confirm what happens when shutting down the PC with the app running.
-        //          We try to avoid saving excessively, like every time a slider value is changed,
-        //          but we also save excessively here every time the app is closed, handle this better.
-        // Save config before closing.
-        ConfigManager::Save();
-        
+        // Persist settings on a normal close. This is not an "excessive" save: the config is
+        // already written after each user action, but a few runtime-only changes are not saved
+        // anywhere else (most notably the selected profile after cycling it with the next/previous
+        // hotkeys), so this final save captures them. ConfigManager::Save writes a small UTF-8 .ini
+        // via a temp file and an atomic rename - cheap enough to do once on exit, so a dirty-flag
+        // is not worth its complexity here.
+        //
+        // A hard process kill (TerminateProcess / End task) cannot be intercepted, so at worst the
+        // on-disk config is missing runtime-only changes made since the last per-action save; the
+        // atomic rename means no partial/corrupt file results. PC shutdown and logoff are handled
+        // by WM_ENDSESSION above, which runs the same save for the case where WM_DESTROY is not
+        // delivered.
+        //
+        // Guard on IsConfigInitialized so an early teardown never overwrites the user's real config
+        // with in-memory defaults: WM_DESTROY also fires when WM_CREATE returns -1 (e.g. renderer
+        // init failed before the config was loaded).
+        if (App::state.IsConfigInitialized())
+            ConfigManager::Save();
+
         // Reset gamma to default before closing.
         GammaManager::ResetDisplay(App::selectedDisplayIndex);
         
