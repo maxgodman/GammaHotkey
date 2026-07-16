@@ -177,7 +177,12 @@ ATOM RegisterMainWindowClass(const HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = CS_HREDRAW | CS_VREDRAW; // @TODO: Do we want to redraw when width/height changes?
+    // No class redraw styles: this window paints via the DirectX 11 swap chain every frame
+    // (and forces a render during interactive resize, see WM_SIZING), never through GDI/WM_PAINT.
+    // CS_HREDRAW/CS_VREDRAW only invalidate the client area for a GDI repaint on resize, which
+    // this app swallows (WM_ERASEBKGND returns 1, WM_PAINT is unhandled), so they do nothing
+    // useful here. The Dear ImGui DX11 example likewise registers its class without them.
+    wcex.style = 0;
     wcex.lpfnWndProc = WndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
