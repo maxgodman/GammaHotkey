@@ -386,6 +386,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
 
+    case WM_GETMINMAXINFO:
+    {
+        // Constrain the maximized window to the monitor's work area so it doesn't cover the
+        // taskbar. A borderless (WS_POPUP) window otherwise maximizes over the whole monitor;
+        // WM_NCCALCSIZE alone can only shrink the client rect, not the window rect, leaving the
+        // strip over the taskbar as undrawn non-client area (the black/blank taskbar symptom).
+        // ptMaxPosition/ptMaxSize are relative to the monitor origin, so use the work-area
+        // offset and size (this also handles a taskbar docked to the top or a side).
+        const HMONITOR hMon = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO monInfo = { sizeof(MONITORINFO) };
+        GetMonitorInfo(hMon, &monInfo);
+        const RECT& work = monInfo.rcWork;
+        const RECT& mon = monInfo.rcMonitor;
+
+        MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+        mmi->ptMaxPosition.x = work.left - mon.left;
+        mmi->ptMaxPosition.y = work.top - mon.top;
+        mmi->ptMaxSize.x = work.right - work.left;
+        mmi->ptMaxSize.y = work.bottom - work.top;
+        return 0;
+    }
+
     case WM_NCCALCSIZE:
     {
         if (wParam == TRUE)
@@ -398,8 +420,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (maximized)
             {
-                // When maximized, constrain to the monitor's work area.
-                // @TODO: This seems to constrain, but the taskbar renders black/blank.
+                // Make the client area fill the whole (borderless) window rect. WM_GETMINMAXINFO
+                // has already constrained that rect to the monitor work area, so the client ends
+                // up exactly the work area with no undrawn frame over the taskbar.
                 const HMONITOR hMon = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
                 MONITORINFO monInfo = { sizeof(MONITORINFO) };
                 GetMonitorInfo(hMon, &monInfo);
