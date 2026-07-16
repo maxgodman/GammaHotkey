@@ -241,7 +241,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_CREATE: // @TODO: Review what belongs here, and what should be shifted elsewhere.
+    case WM_CREATE:
     {
         if (!hWnd) return -1;
 
