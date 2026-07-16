@@ -20,8 +20,10 @@ void RenderContrastSlider(Profile& profile, bool advancedMode);
 void RenderGammaSlider(Profile& profile, bool advancedMode);
 
 /**
- * @brief Renders the button used to toggle between Simple and Advanced UI modes.
- * @TODO: Improve/replace this, not keen on this, but it works.
+ * @brief Renders the Simple/Advanced mode toggle button, pinned to the top-right corner just below
+ *        the title bar. Clicking it does not switch modes inline; it records a deferred request
+ *        (UI::state.targetAdvancedMode / modeJustChanged) that RenderMainUI applies at the top of the
+ *        next frame, where resizing the window and swap chain is safe.
  */
 void RenderModeToggleButton();
 

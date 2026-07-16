@@ -362,17 +362,23 @@ void RenderGammaSlider(Profile& profile, const bool advancedMode)
 void RenderModeToggleButton()
 {
     const ImGuiIO& io = ImGui::GetIO();
+
+    // The toggle lives in its own small borderless window pinned to the top-right corner, just below
+    // the custom title bar, so it stays anchored regardless of the content laid out beneath it. The
+    // host window is sized to wrap the button exactly (button size plus WindowPadding on every side)
+    // and positioned so the button itself lands at buttonPos.
     const float buttonWidth = 90.0f;
     const float buttonHeight = 28.0f;
-    const float padding = 2.0f;
+    const float rightMargin = 8.0f;                    // Gap from the parent window's right edge.
+    const float topMargin = 2.0f;                      // Gap below the title bar.
+    const ImVec2 windowPadding = ImVec2(4.0f, 2.0f);
 
-    // Position in top right, just below title bar.
-    const ImVec2 buttonPos = ImVec2(io.DisplaySize.x - buttonWidth - 8.0f, UIConstants::TITLEBAR_HEIGHT + padding);
+    const ImVec2 buttonPos = ImVec2(io.DisplaySize.x - buttonWidth - rightMargin,
+                                    UIConstants::TITLEBAR_HEIGHT + topMargin);
 
-    // Create an invisible window for the button (required for ImGui widgets to work).
-    ImGui::SetNextWindowPos(ImVec2(buttonPos.x - 4.0f, buttonPos.y - 2.0f));
-    ImGui::SetNextWindowSize(ImVec2(buttonWidth + 8.0f, buttonHeight + 4.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 2));
+    ImGui::SetNextWindowPos(ImVec2(buttonPos.x - windowPadding.x, buttonPos.y - windowPadding.y));
+    ImGui::SetNextWindowSize(ImVec2(buttonWidth + windowPadding.x * 2.0f, buttonHeight + windowPadding.y * 2.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, windowPadding);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.06f, 0.06f, 0.07f, 1.0f)); // Dark background.
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.1f, 0.1f, 0.11f, 1.0f)); // Subtle border.
@@ -388,6 +394,9 @@ void RenderModeToggleButton()
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.25f, 0.25f, 0.25f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f)); // Ensure text is visible.
 
+        // The label shows the mode this button switches TO. The switch is intentionally deferred:
+        // record the target and flag it, then RenderMainUI applies it at the top of the next frame
+        // (see UI_Main.cpp), where resizing the window/swap chain is safe.
         const char* buttonText = App::state.IsAdvancedModeEnabled() ? "Simple" : "Advanced";
         if (ImGui::Button(buttonText, ImVec2(buttonWidth, buttonHeight)))
         {
