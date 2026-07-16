@@ -189,7 +189,9 @@ ATOM RegisterMainWindowClass(const HINSTANCE hInstance)
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GAMMAHOTKEY));
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);  // Black background to match ImGui. @TODO: Unsure if this actually works.
+    // Never painted: this app handles WM_ERASEBKGND, so the class brush is unused.
+    // Kept as a harmless dark default in case the erase handling ever changes.
+    wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wcex.lpszMenuName = nullptr;  // No Win32 menu.
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
