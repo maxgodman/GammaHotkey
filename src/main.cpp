@@ -214,10 +214,29 @@ ATOM RegisterMainWindowClass(const HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
+// Show the window without the white flash that appears when a never-composited (or previously
+// hidden) window is shown: its DWM redirection surface starts blank and DWM composites that blank
+// surface for one frame before our next render lands. Cloak the window (DWMWA_CLOAK) so DWM does
+// not display it while it is shown, render one frame so the redirection surface holds the finished
+// UI, then uncloak to reveal it already painted. Covers both first show and re-show from the tray.
+static void ShowWindowCloaked(const HWND hWnd, const bool restore)
+{
+    BOOL cloaked = TRUE;
+    DwmSetWindowAttribute(hWnd, 13 /* DWMWA_CLOAK */, &cloaked, sizeof(cloaked));
+
+    ShowWindow(hWnd, SW_SHOW);
+    if (restore)
+        ShowWindow(hWnd, SW_RESTORE); // Un-minimize when re-shown from the tray.
+
+    RenderImGuiFrame();
+
+    cloaked = FALSE;
+    DwmSetWindowAttribute(hWnd, 13 /* DWMWA_CLOAK */, &cloaked, sizeof(cloaked));
+}
+
 void ShowMainWindow(const HWND hWnd)
 {
-    ShowWindow(hWnd, SW_SHOW);
-    ShowWindow(hWnd, SW_RESTORE);
+    ShowWindowCloaked(hWnd, true);
     SetForegroundWindow(hWnd);
 }
 
@@ -387,11 +406,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else
         {
-            // Render one complete ImGui frame before the first show so the swap chain already
+            // Render one complete ImGui frame before the first show, so the swap chain already
             // holds the finished UI when the window is revealed. The window is already sized
             // (SyncWindowSizeToState above resized the swap chain).
             RenderImGuiFrame();
-            ShowWindow(hWnd, SW_SHOW);
+
+            // Show the window without the startup white flash (see ShowWindowCloaked).
+            ShowWindowCloaked(hWnd, false);
         }
 
         break;
