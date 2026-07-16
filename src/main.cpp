@@ -65,6 +65,10 @@ HINSTANCE hInst;
 WCHAR szTitle[AppConstants::MAX_LOADSTRING];
 WCHAR szWindowClass[AppConstants::MAX_LOADSTRING];
 
+// Whether this thread's CoInitialize (in WM_CREATE) took a reference and therefore owns a
+// matching CoUninitialize (in WM_DESTROY). See the COM handling in WndProc.
+static bool s_comInitialized = false;
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR lpCmdLine,
@@ -256,14 +260,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return -1;
         }
 
-        // Initialize COM, needed for startup shortcuts.
-        HRESULT hr = CoInitialize(nullptr);
-        if (FAILED(hr))
-        {
-            // @TODO:   What exactly are the implications of failure here?
-            //          Also handle CoUninitialize more safely with a similar check?
-            return -1;
-        }
+        // Initialize COM on this (UI) thread. COM is only used by StartupManager, to write the
+        // "launch on startup" shortcut via IShellLink; nothing else in the app needs it. A failure
+        // is therefore not fatal - we keep running and only that optional feature degrades (its
+        // CoCreateInstance fails so the shortcut just isn't created), rather than tearing down the
+        // whole app over it. Record whether we actually took a reference so WM_DESTROY balances it
+        // correctly: S_OK and S_FALSE both need a matching CoUninitialize (both are SUCCEEDED),
+        // whereas RPC_E_CHANGED_MODE (COM already initialized in a different mode) took no
+        // reference and must not be uninitialized.
+        const HRESULT hr = CoInitialize(nullptr);
+        s_comInitialized = SUCCEEDED(hr);
 
         // Enumerate displays, required before config load validates display index.
         DisplayManager::EnumerateDisplays();
@@ -381,8 +387,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             g_ImGuiRenderer = nullptr;
         }
         
-        // @TODO: This may be unsafe if we failed to CoInitialize()? Investigate.
-        CoUninitialize();
+        // Balance the CoInitialize from WM_CREATE, but only when it actually took a reference
+        // (S_OK/S_FALSE). If it failed - including RPC_E_CHANGED_MODE, where COM was already
+        // initialized in another mode and we took no reference - we must not uninitialize. This
+        // guard also matters because WM_DESTROY runs when WM_CREATE returns -1 (e.g. renderer init
+        // failed), before COM was ever initialized.
+        if (s_comInitialized)
+        {
+            CoUninitialize();
+            s_comInitialized = false;
+        }
         PostQuitMessage(0);
         break;
 
