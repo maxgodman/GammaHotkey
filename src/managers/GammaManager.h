@@ -44,9 +44,18 @@ namespace GammaManager
     void ResetDisplay(const int displayIndex);
     
     /**
-     * @brief Build a gamma ramp from profile settings.
+     * @brief Compute the normalized gamma curve from profile settings and cache it (App::state.lastRamp),
+     *        without building an applyable ramp or touching any display.
+     * @param[in] profile Profile containing brightness, contrast, and gamma values.
+     * @note Use this to refresh the curve preview from pending settings without applying them.
+     */
+    void BuildRamp(const Profile& profile);
+
+    /**
+     * @brief Build a gamma ramp from profile settings, without applying it to any display.
      * @param[in] profile Profile containing brightness, contrast, and gamma values.
      * @param[out] ramp Output array [3][256] for R, G, B channels.
+     * @note Also refreshes the cached curve preview via BuildRamp().
      */
     void BuildGammaRamp(const Profile& profile, WORD ramp[3][256]);
 }

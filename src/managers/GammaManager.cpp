@@ -12,51 +12,61 @@
 
 namespace GammaManager
 {
-    void BuildGammaRamp(const Profile& profile, WORD ramp[3][256])
+    void BuildRamp(const Profile& profile)
     {
         // We should probably clamp to safer values here, but SetDeviceGammaRamp() has a bunch of safety
         // built into it to prevent the screen from becoming unreadable, so we will rely on that instead.
         const float gamma = profile.gamma;
         const float contrast = profile.contrast;
         const int brightness = profile.brightness;
-        
+
         // Remap brightness from (-50 to +50) to (-0.25 to +0.25).
         const float brightnessOffset = brightness / 200.0f;
 
-        // Build ramp for all 256 possible input values.
+        // Compute the normalized (0.0 to 1.0) curve for all 256 possible input values and cache it.
+        // This is the construction step, kept separate from application so callers can refresh the
+        // preview from pending settings without touching the display (see ApplyProfile for the apply
+        // step and BuildGammaRamp for the applyable 16-bit conversion).
         for (int i = 0; i < GammaConstants::RAMP_SIZE; ++i)
         {
             // Start with normalized input (0.0 to 1.0).
             float v = i / 255.0f;
-            
+
             // 1. Apply brightness (linear offset).
             v += brightnessOffset;
-            
+
             // 2. Apply contrast (scale around midpoint 0.5).
             // Formula: output = (input - 0.5) * contrast + 0.5
             // This keeps midpoint unchanged while expanding/compressing range.
             v = (v - 0.5f) * contrast + 0.5f;
-            
+
             // 3. Clamp to valid range [0, 1].
             v = std::max(0.0f, std::min(1.0f, v));
-            
+
             // 4. Apply gamma curve (power function).
             v = powf(v, 1.0f / gamma);
-            
+
             // Cache for external use, such as the gamma curve preview.
-            // @TODO:   Refactor this, currently this is fine but is too rigid if we make changes such as:
-            //          - Build ramps without applying them.
-            //          - Update gamma ramp preview from pending setting changes without applying them.
             App::state.lastRamp[i] = v;
-            
+        }
+    }
+
+    void BuildGammaRamp(const Profile& profile, WORD ramp[3][256])
+    {
+        // Construct the normalized curve (also updates the cached preview), then convert it to the
+        // Windows 16-bit gamma ramp format without applying it to any display.
+        BuildRamp(profile);
+
+        for (int index = 0; index < GammaConstants::RAMP_SIZE; ++index)
+        {
             // Convert to Windows gamma ramp format (16-bit integer, 0-65535).
-            const WORD val = (WORD)(v * GammaConstants::RAMP_MAX + 0.5f);
-            
+            const WORD val = (WORD)(App::state.lastRamp[index] * GammaConstants::RAMP_MAX + 0.5f);
+
             // Apply same value to all three color channels.
             // Could be extended to support per-channel adjustments for color tinting.
-            ramp[0][i] = val;  // Red.
-            ramp[1][i] = val;  // Green.
-            ramp[2][i] = val;  // Blue.
+            ramp[0][index] = val;  // Red.
+            ramp[1][index] = val;  // Green.
+            ramp[2][index] = val;  // Blue.
         }
     }
     
