@@ -34,7 +34,9 @@ void RenderTitleBar();
 
 /**
  * @brief Renders gamma curve visualization.
- * @TODO: This does not respect DPI changes.
+ *
+ * Its fixed pixel metrics (minimum canvas size, curve and grid/border line thickness) are scaled
+ * by the window's DPI so the graph keeps its proportions on high-DPI monitors.
  */
 void DrawGammaCurve();
 

@@ -584,37 +584,45 @@ void DrawGammaCurve()
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     const ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    const float minCanvasWidth = 150.0f;
-    const float minCanvasHeight = 100.0f;
+
+    // Scale the hardcoded pixel metrics below by the window's DPI so the graph keeps the same
+    // visual proportions at any scale. GetContentRegionAvail() is already in physical pixels (it
+    // reflects the DPI-scaled window and style), so only these literals need the factor. At 100%
+    // DPI the factor is 1.0, leaving every size unchanged. GetDpiForWindow is the authoritative
+    // per-monitor-V2 source, matching how ImGui_Integration derives its own scale.
+    const float dpiScale = GetDpiForWindow(App::mainWindow) / 96.0f;
+    const float minCanvasWidth = 150.0f * dpiScale;
+    const float minCanvasHeight = 100.0f * dpiScale;
+    const float lineThickness = 1.0f * dpiScale;
 
     const ImVec2 canvasSize = ImVec2(
         ImMax(ImGui::GetContentRegionAvail().x, minCanvasWidth),
         ImMax(ImGui::GetContentRegionAvail().y, minCanvasHeight)
     );
-    
+
     // Background.
     drawList->AddRectFilled(canvasPos,
         ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y),
         IM_COL32(250, 250, 250, 255));
-    
+
     // Border.
     drawList->AddRect(canvasPos,
         ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y),
-        IM_COL32(200, 200, 200, 255));
-    
+        IM_COL32(200, 200, 200, 255), 0.0f, 0, lineThickness);
+
     // Grid lines.
     for (int i = 1; i < 4; ++i)
     {
         const float y = canvasPos.y + (i * canvasSize.y / 4);
         drawList->AddLine(ImVec2(canvasPos.x, y),
             ImVec2(canvasPos.x + canvasSize.x, y),
-            IM_COL32(220, 220, 220, 255));
+            IM_COL32(220, 220, 220, 255), lineThickness);
     }
-    
+
     // Draw curve.
     const ImU32 curveColor = App::state.gammaRampFailed ? IM_COL32(220, 53, 69, 255) : IM_COL32(13, 110, 253, 255);
-    const float curveThickness = 2.0f;
-    
+    const float curveThickness = 2.0f * dpiScale;
+
     for (int i = 0; i < 255; ++i)
     {
         const float x0 = canvasPos.x + (i / 255.0f) * canvasSize.x;
