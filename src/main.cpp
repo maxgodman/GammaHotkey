@@ -498,17 +498,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     case WM_SIZING:
-        // @TODO: Investigate best practices around handling WM_SIZING and WM_SIZE, uncertain of this approach.
-        // User is actively resizing, force immediate render.
+        // An interactive border drag runs a modal resize loop inside Windows that blocks our
+        // main PeekMessage loop, so nothing would repaint until the drag ends. Render inline
+        // here to keep the UI live while the user drags. This is safe from nested ImGui frames
+        // because WM_SIZING is only sent by that drag loop, never re-entrantly from within a
+        // frame. Returning TRUE is the documented result for an app that processes WM_SIZING.
         RenderImGuiFrame();
         return TRUE;
 
     case WM_SIZE:
         if (g_ImGuiRenderer && wParam != SIZE_MINIMIZED)
         {
+            // Only resize the swap-chain buffers here; deliberately do not render. WM_SIZE can
+            // arrive synchronously from within an in-progress ImGui frame (RenderMainUI calls
+            // SyncWindowSizeToState -> SetWindowPos on a Simple/Advanced mode change), so calling
+            // NewFrame again would nest frames and crash. The next main-loop frame, or the
+            // WM_SIZING render during an interactive drag, paints at the new size.
             g_ImGuiRenderer->OnResize(LOWORD(lParam), HIWORD(lParam));
-            // Don't render immediately, let the next frame handle it.
-            // Immediate rendering during maximize causes nested ImGui frames and crashes.
         }
         break;
 
