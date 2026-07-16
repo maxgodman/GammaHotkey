@@ -101,7 +101,12 @@ void ImGuiRenderer::OnResize(const int width, const int height)
     if (m_pd3dDevice == nullptr)
         return;
 
+    // Drop every reference to the back buffer before resizing it. CleanupRenderTarget() releases
+    // our render-target view, but the immediate context still has it bound to the output-merger
+    // stage from the previous frame - an indirect reference that keeps back buffer 0 alive. Unbind
+    // it so no reference outlives the resize (required by the flip model, harmless here).
     CleanupRenderTarget();
+    m_pd3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
     m_pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
     CreateRenderTarget();
 }
@@ -139,12 +144,24 @@ bool ImGuiRenderer::CreateDeviceD3D(const HWND hwnd)
     sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     sd.BufferDesc.RefreshRate.Numerator = 60;
     sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    // Windowed-only app (custom DWM frame, never exclusive fullscreen), so no mode-switch
+    // flag: nothing here ever changes the display mode, and leaving Flags at 0 keeps the
+    // creation flags consistent with the ResizeBuffers(..., 0) call in OnResize().
+    sd.Flags = 0;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.OutputWindow = hwnd;
     sd.SampleDesc.Count = 1;
     sd.SampleDesc.Quality = 0;
     sd.Windowed = TRUE;
+    // Blt model (bitblt), deliberately not the flip model. This window uses a custom frame
+    // (WM_NCCALCSIZE makes the client area nearly the whole window), so the client back buffer is
+    // a few pixels smaller than the outer window. Under the flip model DWM composites the swap
+    // chain buffer directly and bilinearly stretches it whenever its size does not exactly match
+    // the client region, which softened all text in windowed sizes (and only there - a maximized
+    // window's client is set to the exact work-area rect, so it matched and stayed sharp). The blt
+    // model presents through DWM's redirection surface, which composites 1:1 and keeps text crisp
+    // at every window size. The app clears and fully redraws every frame, so DISCARD (which does
+    // not preserve back-buffer contents between presents) is fine.
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     UINT createDeviceFlags = 0;
