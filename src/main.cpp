@@ -72,6 +72,11 @@ WCHAR szWindowClass[AppConstants::MAX_LOADSTRING];
 // matching CoUninitialize (in WM_DESTROY). See the COM handling in WndProc.
 static bool s_comInitialized = false;
 
+// The custom caption button (HTMINBUTTON/HTMAXBUTTON/HTCLOSE) currently pressed, or HTNOWHERE if
+// none. Set on WM_NCLBUTTONDOWN and cleared on WM_NCLBUTTONUP so the action fires only when press
+// and release land on the same button, matching native caption-button behavior.
+static WPARAM s_pressedCaptionButton = HTNOWHERE;
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR lpCmdLine,
@@ -529,14 +534,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_NCHITTEST:
     {
-        // Resolve the default first. With the frame removed by WM_NCCALCSIZE this is HTCLIENT almost
-        // everywhere; if DefWindowProc does report a frame region, honor it unchanged.
+        POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        ScreenToClient(hWnd, &point);
+
+        // Custom caption buttons take priority over both the frame and the caption, so they stay
+        // fully clickable to the very edge and the maximize button's HTMAXBUTTON keeps driving the
+        // Windows 11 snap-layouts flyout. Rects are published by RenderTitleBar each frame.
+        const auto& tb = UI::state.titleBar;
+        if (tb.valid)
+        {
+            if (PtInRect(&tb.closeButton, point)) return HTCLOSE;
+            if (PtInRect(&tb.maxButton, point)) return HTMAXBUTTON;
+            if (PtInRect(&tb.minButton, point)) return HTMINBUTTON;
+        }
+
+        // Otherwise resolve the frame via the default proc. With the frame removed by WM_NCCALCSIZE
+        // this is HTCLIENT almost everywhere; if it does report a frame region, honor it unchanged.
         const LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
         if (hit != HTCLIENT)
             return hit;
-
-        POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        ScreenToClient(hWnd, &point);
 
         RECT rect;
         GetClientRect(hWnd, &rect);
@@ -569,21 +585,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         // The drag strip reports HTCAPTION, so Windows runs its own move loop: the source of Aero
-        // Snap, the taskbar peek (the window can no longer be dragged fully behind the taskbar),
-        // window-shake and drag-off-maximize, none of which a self-managed SetWindowPos drag could
-        // provide. The button cluster right of dragRight stays HTCLIENT so ImGui keeps its clicks;
-        // this holds when maximized too, so the buttons work and the caption can still be grabbed to
-        // drag the window off its maximized state. Until RenderTitleBar publishes regions (valid is
-        // false), the whole client stays HTCLIENT.
-        if (UI::state.titleBar.valid &&
-            point.y >= 0 && point.y < UI::state.titleBar.captionBottom &&
-            point.x >= 0 && point.x < UI::state.titleBar.dragRight)
+        // Snap, taskbar peek, window-shake and drag-off-maximize that a self-managed SetWindowPos
+        // drag could not provide. The About button and content right of dragRight stay HTCLIENT, so
+        // ImGui keeps those clicks; this holds when maximized too, so the caption can still be
+        // grabbed to drag the window off its maximized state.
+        if (tb.valid &&
+            point.y >= 0 && point.y < tb.captionBottom &&
+            point.x >= 0 && point.x < tb.dragRight)
         {
             return HTCAPTION;
         }
 
         return HTCLIENT;
     }
+
+    case WM_NCLBUTTONDOWN:
+        // A press on a custom caption button: remember it and swallow the message so DefWindowProc
+        // does not run its own (now frameless) caption-button tracking. The action fires on
+        // WM_NCLBUTTONUP only if the release lands on the same button. Any other non-client press
+        // (notably HTCAPTION) falls through to DefWindowProc, which starts the window-move loop.
+        if (wParam == HTMINBUTTON || wParam == HTMAXBUTTON || wParam == HTCLOSE)
+        {
+            s_pressedCaptionButton = wParam;
+            return 0;
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    case WM_NCLBUTTONUP:
+        // Complete a caption-button click: run the action only when the release is over the same
+        // button that was pressed. Minimize to the taskbar, toggle maximize/restore, and route
+        // close through WM_CLOSE so the minimize-to-tray setting still applies.
+        if (s_pressedCaptionButton != HTNOWHERE)
+        {
+            const WPARAM pressed = s_pressedCaptionButton;
+            s_pressedCaptionButton = HTNOWHERE;
+            if (wParam == pressed)
+            {
+                if (pressed == HTMINBUTTON)
+                    ShowWindow(hWnd, SW_MINIMIZE);
+                else if (pressed == HTMAXBUTTON)
+                    ShowWindow(hWnd, IsZoomed(hWnd) ? SW_RESTORE : SW_MAXIMIZE);
+                else if (pressed == HTCLOSE)
+                    PostMessage(hWnd, WM_CLOSE, 0, 0);
+            }
+            return 0;
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    case WM_LBUTTONUP:
+        // Clear any caption-button press that ended in the client area (e.g. pressed a button then
+        // dragged off it before releasing) so it cannot mis-fire on a later non-client release.
+        s_pressedCaptionButton = HTNOWHERE;
+        return DefWindowProc(hWnd, message, wParam, lParam);
 
     case WM_SIZING:
         // An interactive border drag runs a modal resize loop inside Windows that blocks our

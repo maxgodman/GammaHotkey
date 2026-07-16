@@ -27,12 +27,58 @@ static bool IsWindowMaximized(HWND hwnd)
     return wp.showCmd == SW_MAXIMIZE;
 }
 
+// The three custom-drawn window-control buttons. Maximize doubles as Restore when the window is
+// maximized. Clicking is handled natively in the WndProc (these are non-client caption buttons);
+// this file only draws them and publishes their rects. See RenderTitleBar and WM_NCLBUTTONUP.
+enum class CaptionButton { Minimize, MaximizeRestore, Close };
+
 /**
- * @brief Toggles maximize/restore for the specified window.
+ * @brief Draws one native-style caption button into a screen-space rect: a hover background plus
+ *        the glyph as vector primitives, which stay crisp at any DPI (unlike the stretched bitmap
+ *        UI font) and need no icon-font dependency.
+ * @param hovered Whether the OS cursor is over this button. Computed from the cursor position in
+ *        RenderTitleBar rather than from ImGui, because these buttons are non-client and ImGui
+ *        never sees the mouse over them.
+ * @param maximized Selects the Restore glyph (two offset squares) over the Maximize glyph.
  */
-static void ToggleMaximize(HWND hwnd)
+static void DrawCaptionButton(ImDrawList* dl, const CaptionButton kind, const ImVec2& bmin,
+    const ImVec2& bmax, const bool hovered, const bool maximized)
 {
-    ShowWindow(hwnd, IsWindowMaximized(hwnd) ? SW_RESTORE : SW_MAXIMIZE);
+    if (hovered)
+    {
+        const ImU32 bg = (kind == CaptionButton::Close)
+            ? IM_COL32(0xC4, 0x2B, 0x1C, 0xFF)  // Windows 11 close red.
+            : IM_COL32(60, 60, 60, 255);        // Subtle gray for minimize/maximize.
+        dl->AddRectFilled(bmin, bmax, bg);
+    }
+
+    const ImVec2 c((bmin.x + bmax.x) * 0.5f, (bmin.y + bmax.y) * 0.5f);
+    const ImU32 fg = IM_COL32(230, 230, 230, 255);
+    const float t = 1.0f;  // Glyph stroke thickness.
+    const float r = 5.0f;  // Glyph half-extent.
+
+    switch (kind)
+    {
+    case CaptionButton::Minimize:
+        dl->AddLine(ImVec2(c.x - r, c.y), ImVec2(c.x + r, c.y), fg, t);
+        break;
+    case CaptionButton::MaximizeRestore:
+        if (maximized)
+        {
+            // Restore: a back square peeking out up-and-right behind a front square.
+            dl->AddRect(ImVec2(c.x - r + 2, c.y - r), ImVec2(c.x + r, c.y + r - 2), fg, 0.0f, 0, t);
+            dl->AddRect(ImVec2(c.x - r, c.y - r + 2), ImVec2(c.x + r - 2, c.y + r), fg, 0.0f, 0, t);
+        }
+        else
+        {
+            dl->AddRect(ImVec2(c.x - r, c.y - r), ImVec2(c.x + r, c.y + r), fg, 0.0f, 0, t);
+        }
+        break;
+    case CaptionButton::Close:
+        dl->AddLine(ImVec2(c.x - r, c.y - r), ImVec2(c.x + r, c.y + r), fg, t);
+        dl->AddLine(ImVec2(c.x - r, c.y + r), ImVec2(c.x + r, c.y - r), fg, t);
+        break;
+    }
 }
 
 /**
@@ -400,7 +446,8 @@ void RenderTitleBar()
     const ImVec2 titleBarMax = ImVec2(windowPos.x + io.DisplaySize.x, windowPos.y + UIConstants::TITLEBAR_HEIGHT);
     drawList->AddRectFilled(titleBarMin, titleBarMax, IM_COL32(10, 11, 12, 255));
 
-    // About button (left of window controls).
+    // About button (left of the window controls), kept as a normal ImGui button so it stays
+    // HTCLIENT and ImGui handles its click.
     const float buttonWidth = 46.0f;
     const float aboutButtonWidth = 60.0f;
     const float buttonX = titleBarMax.x - (buttonWidth * 3) - aboutButtonWidth - 8;
@@ -409,37 +456,49 @@ void RenderTitleBar()
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
     if (ImGui::Button("About##titlebar", ImVec2(aboutButtonWidth, UIConstants::TITLEBAR_HEIGHT)))
     {
         UI::state.showAboutDialog = true;
     }
     ImGui::PopStyleVar();
+    ImGui::PopStyleColor(3);
 
-    ImGui::SetCursorScreenPos(ImVec2(buttonX + aboutButtonWidth + 8, titleBarMin.y));
+    // Window controls: minimize / maximize-restore / close, custom-drawn as non-client caption
+    // buttons (WM_NCHITTEST reports HTMINBUTTON/HTMAXBUTTON/HTCLOSE and the WndProc runs the action
+    // on click; here we only draw them and publish their rects). Being non-client, ImGui never sees
+    // the mouse over them, so hover comes from the OS cursor position; WindowFromPoint suppresses the
+    // highlight when another window occludes the button under the cursor.
+    POINT screenCursor;
+    GetCursorPos(&screenCursor);
+    const bool cursorOverWindow = (WindowFromPoint(screenCursor) == App::mainWindow);
+    POINT cursor = screenCursor;
+    ScreenToClient(App::mainWindow, &cursor);
 
-    // Minimize button.
-    if (ImGui::Button("-##min", ImVec2(buttonWidth, UIConstants::TITLEBAR_HEIGHT)))
+    const struct { CaptionButton kind; float left; RECT* out; } controls[3] = {
+        { CaptionButton::Minimize,        titleBarMax.x - buttonWidth * 3.0f, &UI::state.titleBar.minButton },
+        { CaptionButton::MaximizeRestore, titleBarMax.x - buttonWidth * 2.0f, &UI::state.titleBar.maxButton },
+        { CaptionButton::Close,           titleBarMax.x - buttonWidth * 1.0f, &UI::state.titleBar.closeButton },
+    };
+
+    for (const auto& ctrl : controls)
     {
-        ShowWindow(App::mainWindow, SW_MINIMIZE);
-    }
-    ImGui::SameLine(0, 0);
+        const ImVec2 bmin(ctrl.left, titleBarMin.y);
+        const ImVec2 bmax(ctrl.left + buttonWidth, titleBarMin.y + UIConstants::TITLEBAR_HEIGHT);
 
-    // Maximize/Restore button.
-    if (ImGui::Button(maximized ? "[]##max" : "[]##max", ImVec2(buttonWidth, UIConstants::TITLEBAR_HEIGHT)))
-    {
-        ToggleMaximize(App::mainWindow);
-    }
-    ImGui::SameLine(0, 0);
+        // Client-space rect for the WndProc hit test. windowPos is (0,0) for the main window, but
+        // subtract it so this holds regardless of where the ImGui window sits.
+        ctrl.out->left   = (LONG)(bmin.x - windowPos.x);
+        ctrl.out->top    = (LONG)(bmin.y - windowPos.y);
+        ctrl.out->right  = (LONG)(bmax.x - windowPos.x);
+        ctrl.out->bottom = (LONG)(bmax.y - windowPos.y);
 
-    // Close button.
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.0f));
-    if (ImGui::Button("X##close", ImVec2(buttonWidth, UIConstants::TITLEBAR_HEIGHT)))
-    {
-        PostMessage(App::mainWindow, WM_CLOSE, 0, 0);
+        const bool hovered = cursorOverWindow &&
+            cursor.x >= ctrl.out->left && cursor.x < ctrl.out->right &&
+            cursor.y >= ctrl.out->top && cursor.y < ctrl.out->bottom;
+
+        DrawCaptionButton(drawList, ctrl.kind, bmin, bmax, hovered, maximized);
     }
-    ImGui::PopStyleColor(4);
 
     // On/Off indicator: a small filled circle on the left of the title bar reflecting whether
     // gamma is currently applied. Read straight from state here because ImGui is immediate-mode

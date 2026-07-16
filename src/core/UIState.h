@@ -47,11 +47,19 @@ public:
     // equal ImGui screen coordinates. Client x in [0, dragRight) is the draggable caption (reported
     // HTCAPTION, so Windows runs the move loop behind Aero Snap, taskbar peek, window-shake and
     // drag-off-maximize); [dragRight, width) is the button cluster (HTCLIENT, so ImGui gets the clicks).
+    //
+    // The minimize/maximize/close buttons are custom-drawn as non-client caption buttons:
+    // WM_NCHITTEST reports each as HTMINBUTTON/HTMAXBUTTON/HTCLOSE (so the maximize button drives
+    // the Windows 11 snap-layouts flyout) and the WndProc runs the action on click. Their rects are
+    // published here for the hit test and take priority over the caption and resize border.
     struct TitleBarHitRegions
     {
         bool valid = false;    // Stays false until the first frame publishes real values.
         int captionBottom = 0; // Caption band spans client y in [0, captionBottom).
         int dragRight = 0;     // Draggable caption spans client x in [0, dragRight).
+        RECT minButton = {};   // Client-space rects of the three window-control buttons.
+        RECT maxButton = {};
+        RECT closeButton = {};
     };
     TitleBarHitRegions titleBar;
 };
