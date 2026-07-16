@@ -39,7 +39,9 @@ namespace App
         if (state.IsGammaEnabled())
         {
             // Re-enable gamma, apply current working values.
-            // @TODO: Should simple mode use the workingProfile?
+            // Simple and Advanced modes intentionally remember independent settings: Advanced
+            // applies the workingProfile, Simple applies its own simpleProfile. Switching modes
+            // must not clobber either, so Simple deliberately does not fall back to workingProfile.
             if (state.IsAdvancedModeEnabled())
             {
                 // Advanced mode applies workingProfile.
