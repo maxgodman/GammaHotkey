@@ -18,7 +18,9 @@ public:
     char renameBuffer[256] = "";
 
     // Dialog state.
-    // @TODO: A better way to manage displaying the different modals/dialogs, rather than individual flags for each of them?
+    // Each bool is a one-shot "open this popup next frame" request: a caller sets it, the matching
+    // Render*Dialog() calls ImGui::OpenPopup() and clears it. ImGui's popup stack owns which modal
+    // is open, so these per-frame flags stay simpler than a single "active dialog" enum.
     bool showHotkeyCapture = false;
     bool showAboutDialog = false;
     bool showHotkeyConflict = false;
