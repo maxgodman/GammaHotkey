@@ -324,9 +324,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else
         {
-            // @TODO:   There is a flicker when the window appears for the first time.
-            //          It looks like ImGui hasn't rendered yet for a frame. Can this be resolved reasonably?
-            UpdateWindow(hWnd);
+            // Render one complete ImGui frame before the first show so the swap chain already
+            // holds the finished UI when the window is revealed. The window is already sized
+            // (SyncWindowSizeToState above resized the swap chain).
+            RenderImGuiFrame();
             ShowWindow(hWnd, SW_SHOW);
         }
 
