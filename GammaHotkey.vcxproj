@@ -155,7 +155,6 @@
     <ClInclude Include="src\managers\DisplayManager.h" />
     <ClInclude Include="src\managers\GammaManager.h" />
     <ClInclude Include="src\managers\HotkeyManager.h" />
-    <ClInclude Include="src\managers\IconManager.h" />
     <ClInclude Include="src\managers\ProfileManager.h" />
     <ClInclude Include="src\managers\StartupManager.h" />
     <ClInclude Include="src\managers\SystemTrayManager.h" />
@@ -180,7 +179,6 @@
     <ClCompile Include="src\managers\DisplayManager.cpp" />
     <ClCompile Include="src\managers\GammaManager.cpp" />
     <ClCompile Include="src\managers\HotkeyManager.cpp" />
-    <ClCompile Include="src\managers\IconManager.cpp" />
     <ClCompile Include="src\managers\ProfileManager.cpp" />
     <ClCompile Include="src\managers\StartupManager.cpp" />
     <ClCompile Include="src\managers\SystemTrayManager.cpp" />

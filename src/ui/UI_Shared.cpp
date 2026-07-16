@@ -473,8 +473,19 @@ void RenderTitleBar()
     }
     ImGui::PopStyleColor(4);
 
-    // Title text (left side of title bar) with On/Off indicator.
-    ImGui::SetCursorScreenPos(ImVec2(titleBarMin.x + 10, titleBarMin.y + 10));
+    // On/Off indicator: a small filled circle on the left of the title bar reflecting whether
+    // gamma is currently applied. Read straight from state here because ImGui is immediate-mode
+    // and this repaints every frame; nothing needs to push updates to it.
+    const float indicatorRadius = ImMax(3.0f, UIConstants::TITLEBAR_HEIGHT * 0.14f);
+    const ImVec2 indicatorCenter = ImVec2(titleBarMin.x + 10.0f + indicatorRadius,
+                                          titleBarMin.y + UIConstants::TITLEBAR_HEIGHT * 0.5f);
+    const ImU32 indicatorColor = App::state.IsGammaEnabled()
+        ? IM_COL32(80, 200, 120, 255)   // Green-ish: gamma on.
+        : IM_COL32(90, 92, 96, 255);    // Dim gray: gamma off.
+    drawList->AddCircleFilled(indicatorCenter, indicatorRadius, indicatorColor);
+
+    // Title text (left side of title bar), positioned to the right of the indicator.
+    ImGui::SetCursorScreenPos(ImVec2(indicatorCenter.x + indicatorRadius + 8.0f, titleBarMin.y + 10.0f));
     const std::wstring statusTextWide = App::GetStatusText();
     const std::string statusText = StringUtils::WideToUTF8(statusTextWide);
     ImGui::Text("%s", statusText.c_str());

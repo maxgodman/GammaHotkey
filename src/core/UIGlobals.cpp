@@ -2,7 +2,7 @@
 
 #include "UIGlobals.h"
 #include "AppGlobals.h"
-#include "IconManager.h"
+#include "SystemTrayManager.h"
 
 namespace UI
 {
@@ -10,6 +10,9 @@ namespace UI
 
     void SyncUIToState()
     {
-        IconManager::UpdateAllIcons(App::state.IsGammaEnabled());
+        // Only the tray icon tracks gamma state. The window/taskbar icon stays fixed; the on/off
+        // indicator lives in the custom title bar, which reads state directly each frame - see
+        // RenderTitleBar.
+        SystemTrayManager::UpdateIcon(App::state.IsGammaEnabled());
     }
 }

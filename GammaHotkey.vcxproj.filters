@@ -32,9 +32,6 @@
     <ClCompile Include="src\managers\HotkeyManager.cpp">
       <Filter>src\managers</Filter>
     </ClCompile>
-    <ClCompile Include="src\managers\IconManager.cpp">
-      <Filter>src\managers</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\ImGui_Integration.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
@@ -100,9 +97,6 @@
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="src\managers\HotkeyManager.h">
-      <Filter>src\managers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\managers\IconManager.h">
       <Filter>src\managers</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\ImGui_Integration.h">
