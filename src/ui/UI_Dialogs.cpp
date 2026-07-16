@@ -240,12 +240,6 @@ void RenderDeleteConfirmDialog()
 
 void RenderAllDialogs()
 {
-    // Only render popups if ImGui context is valid.
-    // Without this, we may crash when switching between Simple and Advanced mode.
-    // @TODO: Investigate this further.
-    if (!ImGui::GetCurrentContext())
-        return;
-
     RenderHotkeyCaptureDialog();
     RenderAboutDialog();
     RenderHotkeyConflictDialog();
