@@ -99,14 +99,16 @@ namespace ConfigManager
         }
     }
     
-    // Clamp gamma adjustment values to their valid ranges, protecting against a
-    // hand-edited or corrupted config that could otherwise produce an unreadable screen
-    // (e.g. Gamma=0 causes a divide that blacks out the display).
+    // Clamp a loaded profile to the same ranges the sliders permit, so a hand-edited
+    // config can't assign values outside what the UI lets the user pick.
     static void ClampProfileValues(Profile& profile)
     {
-        profile.brightness = std::clamp(profile.brightness, -50, 50);
-        profile.contrast = std::clamp(profile.contrast, 0.5f, 1.5f);
-        profile.gamma = std::clamp(profile.gamma, 0.1f, 3.0f);
+        profile.brightness = std::clamp(profile.brightness,
+                                        ProfileRange::BRIGHTNESS_MIN, ProfileRange::BRIGHTNESS_MAX);
+        profile.contrast = std::clamp(profile.contrast,
+                                      ProfileRange::CONTRAST_MIN, ProfileRange::CONTRAST_MAX);
+        profile.gamma = std::clamp(profile.gamma,
+                                   ProfileRange::GAMMA_MIN, ProfileRange::GAMMA_MAX);
     }
 
     // Sanitize profile name by removing problematic characters.

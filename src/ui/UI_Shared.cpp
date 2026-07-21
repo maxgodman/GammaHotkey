@@ -15,6 +15,7 @@
 #include "StringUtils.h"
 #include <string>
 #include <type_traits>
+#include <cstdio>
 
 /**
  * @brief Check if the specified window is maximized.
@@ -355,22 +356,46 @@ static void RenderProfileSlider(Profile& profile, const bool advancedMode, const
     }
 }
 
+// Build a slider's tooltip by appending its permitted range to the description, so the
+// displayed bounds always track ProfileRange instead of a duplicated literal. Each caller
+// stashes the result in a function-local static, so this runs once, not every frame.
+static std::string MakeSliderTooltip(const char* description, int minValue, int maxValue)
+{
+    return std::string(description) + " (" + std::to_string(minValue) + " to " + std::to_string(maxValue) + ")";
+}
+
+static std::string MakeSliderTooltip(const char* description, float minValue, float maxValue)
+{
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "%s (%.1f to %.1f)", description, minValue, maxValue);
+    return buffer;
+}
+
 void RenderBrightnessSlider(Profile& profile, const bool advancedMode)
 {
+    static const std::string tooltip = MakeSliderTooltip("Adjust screen brightness",
+                                                         ProfileRange::BRIGHTNESS_MIN, ProfileRange::BRIGHTNESS_MAX);
     RenderProfileSlider<int>(profile, advancedMode, "Brightness", &Profile::brightness,
-                             -50, 50, 0, "Adjust screen brightness (-50 to 50)");
+                             ProfileRange::BRIGHTNESS_MIN, ProfileRange::BRIGHTNESS_MAX,
+                             ProfileRange::BRIGHTNESS_DEFAULT, tooltip.c_str());
 }
 
 void RenderContrastSlider(Profile& profile, const bool advancedMode)
 {
+    static const std::string tooltip = MakeSliderTooltip("Adjust screen contrast",
+                                                         ProfileRange::CONTRAST_MIN, ProfileRange::CONTRAST_MAX);
     RenderProfileSlider<float>(profile, advancedMode, "Contrast", &Profile::contrast,
-                               0.5f, 1.5f, 1.0f, "Adjust screen contrast (0.5 to 1.5)");
+                               ProfileRange::CONTRAST_MIN, ProfileRange::CONTRAST_MAX,
+                               ProfileRange::CONTRAST_DEFAULT, tooltip.c_str());
 }
 
 void RenderGammaSlider(Profile& profile, const bool advancedMode)
 {
+    static const std::string tooltip = MakeSliderTooltip("Adjust gamma curve",
+                                                         ProfileRange::GAMMA_MIN, ProfileRange::GAMMA_MAX);
     RenderProfileSlider<float>(profile, advancedMode, "Gamma", &Profile::gamma,
-                               0.1f, 3.0f, 1.0f, "Adjust gamma curve (0.1 to 3.0)");
+                               ProfileRange::GAMMA_MIN, ProfileRange::GAMMA_MAX,
+                               ProfileRange::GAMMA_DEFAULT, tooltip.c_str());
 }
 
 void RenderModeToggleButton()

@@ -8,15 +8,37 @@
 #include <string>
 
 /**
+ * @brief Value ranges the profile sliders permit for each adjustment.
+ *
+ * The Simple/Advanced sliders bind to these, and ConfigManager clamps a loaded
+ * profile to them, so the UI and the on-disk config share one source of truth.
+ */
+namespace ProfileRange
+{
+    // Brightness is an integer offset; contrast and gamma are float multipliers.
+    constexpr int BRIGHTNESS_MIN = -50;
+    constexpr int BRIGHTNESS_MAX = 50;
+    constexpr int BRIGHTNESS_DEFAULT = 0;
+
+    constexpr float CONTRAST_MIN = 0.5f;
+    constexpr float CONTRAST_MAX = 1.5f;
+    constexpr float CONTRAST_DEFAULT = 1.0f;
+
+    constexpr float GAMMA_MIN = 0.1f;
+    constexpr float GAMMA_MAX = 3.0f;
+    constexpr float GAMMA_DEFAULT = 1.0f;
+}
+
+/**
  * @brief Profile containing gamma adjustment settings and hotkey binding.
  */
 struct Profile
 {
     std::wstring name;
-    int brightness = 0;     // Range: -50 to 50
-    float contrast = 1.0f;  // Range: 0.5 to 1.5
-    float gamma = 1.0f;     // Range: 0.1 to 3.0
-    UINT hotkey = 0;        // Virtual key code, 0 = none.
+    int brightness = ProfileRange::BRIGHTNESS_DEFAULT;
+    float contrast = ProfileRange::CONTRAST_DEFAULT;
+    float gamma = ProfileRange::GAMMA_DEFAULT;
+    UINT hotkey = 0;  // Virtual key code, 0 = none.
     
     Profile() = default;
     Profile(std::wstring n, int b, float c, float g, UINT h)
