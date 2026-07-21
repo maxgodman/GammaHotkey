@@ -96,6 +96,7 @@ Settings are stored in `{ExecutableName}.ini` in the same folder as the executab
 - Visual Studio 2026
 - Windows 10 SDK
 - C++20 compiler
+- VS Code + C/C++ extension (optional, to build in VS Code)
 
 ### Build Steps
 
@@ -110,13 +111,12 @@ Settings are stored in `{ExecutableName}.ini` in the same folder as the executab
    git submodule update --init --recursive
    ```
 
-3. Open `GammaHotkey.slnx` in Visual Studio 2026
+3. Build (Release / x64):
+   - **Visual Studio** - open `GammaHotkey.slnx` and build.
+   - **VS Code** - open project directory in VS Code, and Run Build Task.
+   - **Command line** - `powershell -NoProfile -File scripts/build.ps1 -Configuration Release -Platform x64`
 
-4. Build the solution:
-   - Configuration: Release
-   - Platform: x64
-
-5. Output: `x64/Release/GammaHotkey.exe`
+4. Output: `x64/Release/GammaHotkey.exe`
 
 ### Dependencies
 
