@@ -406,11 +406,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else
         {
-            // Render one complete ImGui frame before the first show, so the swap chain already
-            // holds the finished UI when the window is revealed. The window is already sized
-            // (SyncWindowSizeToState above resized the swap chain).
-            RenderImGuiFrame();
-
             // Show the window without the startup white flash (see ShowWindowCloaked).
             ShowWindowCloaked(hWnd, false);
         }
