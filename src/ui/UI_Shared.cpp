@@ -282,7 +282,15 @@ void RenderOptionsCheckboxes()
     
     if (ImGui::Checkbox("Launch on Windows startup", &App::launchOnStartup))
     {
-        StartupManager::SetEnabled(App::launchOnStartup);
+        std::wstring detail;
+        if (!StartupManager::SetEnabled(App::launchOnStartup, &detail))
+        {
+            // The shortcut wasn't written/removed, so the checkbox is lying. Reflect the real
+            // on-disk state, then surface the failure instead of silently swallowing it.
+            App::launchOnStartup = StartupManager::IsEnabled();
+            UI::state.startupShortcutErrorDetail = StringUtils::WideToUTF8(detail);
+            UI::state.showStartupShortcutError = true;
+        }
         ConfigManager::Save();
     }
     if (ImGui::IsItemHovered())

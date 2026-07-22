@@ -25,6 +25,7 @@ public:
     bool showAboutDialog = false;
     bool showHotkeyConflict = false;
     bool showDeleteConfirm = false;
+    bool showStartupShortcutError = false;
     bool closeCapturePopup = false;
 
     int deleteProfileIndex = -1;
@@ -36,6 +37,7 @@ public:
     UINT conflictingHotkey = 0;
     std::string conflictDescription = "";
     std::string captureRejectReason = ""; // Shown in the capture dialog when an unbindable key is pressed.
+    std::string startupShortcutErrorDetail = ""; // Shown in the startup-shortcut error dialog; may be empty (no HRESULT detail).
 
     // Mode switching.
     bool modeJustChanged = false;

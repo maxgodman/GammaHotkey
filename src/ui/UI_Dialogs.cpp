@@ -252,10 +252,60 @@ void RenderDeleteConfirmDialog()
     }
 }
 
+void RenderStartupShortcutErrorDialog()
+{
+    if (UI::state.showStartupShortcutError)
+    {
+        ImGui::OpenPopup("Startup Shortcut");
+        UI::state.showStartupShortcutError = false;
+    }
+
+    // Pin the width to the (non-wrapped) header line so the wrapped body text has a known wrap
+    // width from the first frame; height still auto-fits (the 0). Without a fixed width, TextWrapped
+    // + auto-resize takes a couple of frames to settle the size, and the centering would place the
+    // not-yet-settled window off-center on the first shown frame - a visible flicker.
+    const char* header = "Couldn't update the \"Launch on Windows startup\" setting.";
+    const float dialogWidth = ImGui::CalcTextSize(header).x + ImGui::GetStyle().WindowPadding.x * 2.0f;
+    ImGui::SetNextWindowSize(ImVec2(dialogWidth, 0.0f), ImGuiCond_Always);
+
+    CenterNextModal();
+    if (ImGui::BeginPopupModal("Startup Shortcut", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Text("%s", header);
+        ImGui::Spacing();
+        ImGui::TextWrapped("Windows wouldn't let the startup shortcut be changed, so the setting was "
+                           "left as it was.");
+
+        // Specific reason (with HRESULT) when we have one; the message above stands alone if not.
+        if (!UI::state.startupShortcutErrorDetail.empty())
+        {
+            ImGui::Spacing();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.7f, 0.0f, 1.0f));
+            ImGui::TextWrapped("%s", UI::state.startupShortcutErrorDetail.c_str());
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        const float buttonWidth = 120.0f;
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - buttonWidth) * 0.5f);
+        if (ImGui::Button("OK", ImVec2(buttonWidth, 0)))
+        {
+            UI::state.startupShortcutErrorDetail.clear();
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
 void RenderAllDialogs()
 {
     RenderHotkeyCaptureDialog();
     RenderAboutDialog();
     RenderHotkeyConflictDialog();
     RenderDeleteConfirmDialog();
+    RenderStartupShortcutErrorDialog();
 }

@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace StartupManager
 {
     /**
@@ -18,10 +20,14 @@ namespace StartupManager
      * @return true if startup shortcut exists.
      */
     bool IsEnabled();
-    
+
     /**
      * @brief Enable or disable launch on Windows startup.
      * @param enabled true to enable, false to disable.
+     * @param errorDetail Optional; on failure, filled with a human-readable reason (with the
+     *        underlying HRESULT). Left untouched on success.
+     * @return true if the shortcut was written/removed successfully, false if it wasn't (in which
+     *         case the on-disk state is unchanged and callers should re-sync from IsEnabled()).
      */
-    void SetEnabled(const bool enabled);
+    bool SetEnabled(const bool enabled, std::wstring* errorDetail = nullptr);
 }
