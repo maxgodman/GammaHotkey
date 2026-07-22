@@ -823,8 +823,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_KEYDOWN:
-        // Capture hotkey for ImGui popup.
-        // Actual hotkey handling is done by keyboard hook.
+        // Capture the pressed key for the ImGui "set hotkey" popup only.
+        // Registered hotkeys fire via WM_HOTKEY (RegisterHotKey), handled above.
         OnHotkeyCapture((UINT)wParam);
         return 0;
 

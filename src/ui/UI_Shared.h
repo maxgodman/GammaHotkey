@@ -51,7 +51,7 @@ void ApplyImGuiStyle();
 void SyncUIWithCurrentProfile();
 
 /**
- * @brief Handle hotkey capture from keyboard hook.
+ * @brief Handle key capture for the "set hotkey" popup (from WM_KEYDOWN).
  */
 void OnHotkeyCapture(const UINT vk);
 
