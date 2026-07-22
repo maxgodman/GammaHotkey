@@ -47,6 +47,15 @@ namespace SystemTrayManager
         s_iconAdded = true;
     }
 
+    UINT GetTaskbarCreatedMessage()
+    {
+        // RegisterWindowMessage returns the same atom for a given string across the whole system,
+        // so register once and cache. Explorer broadcasts this to every top-level window (including
+        // ours while it is hidden in the tray) when it recreates the taskbar.
+        static const UINT s_taskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
+        return s_taskbarCreated;
+    }
+
     void RemoveIcon()
     {
         Shell_NotifyIcon(NIM_DELETE, &g_nid);

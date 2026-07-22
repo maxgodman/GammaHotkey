@@ -274,6 +274,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
         return true;
 
+    // Explorer restarted and recreated the taskbar, which destroyed our tray icon. Re-add it so the
+    // app stays reachable (this also arrives while minimized to the tray, since the hidden window
+    // still receives the broadcast). "TaskbarCreated" is a runtime-registered message, so it can't
+    // be a switch case below. The 0 guard avoids matching WM_NULL should registration ever fail.
+    const UINT taskbarCreatedMsg = SystemTrayManager::GetTaskbarCreatedMessage();
+    if (taskbarCreatedMsg != 0 && message == taskbarCreatedMsg)
+    {
+        SystemTrayManager::AddIcon(hWnd);
+        return 0;
+    }
+
     switch (message)
     {
     case WM_CREATE:
