@@ -89,9 +89,11 @@ namespace HotkeyManager
         {
             App::ToggleGamma();
         }
-        else if (hotkeyId == HotkeyIDs::PREVIOUS_PROFILE)
+        else if (hotkeyId == HotkeyIDs::PREVIOUS_PROFILE || hotkeyId == HotkeyIDs::NEXT_PROFILE)
         {
-            // If gamma is disabled, just enable it (don't cycle to different profile).
+            const int direction = (hotkeyId == HotkeyIDs::NEXT_PROFILE) ? 1 : -1;
+
+            // If gamma is disabled, just enable it (don't cycle to a different profile).
             if (!App::state.IsGammaEnabled())
             {
                 App::state.SetGammaEnabled(true);
@@ -99,24 +101,8 @@ namespace HotkeyManager
             }
             else
             {
-                // Gamma is already enabled, cycle to previous profile.
-                ProfileManager::CycleProfile(-1);
-                SyncUIWithCurrentProfile();
-            }
-            UI::SyncUIToState();
-        }
-        else if (hotkeyId == HotkeyIDs::NEXT_PROFILE)
-        {
-            // If gamma is disabled, just enable it (don't cycle to different profile).
-            if (!App::state.IsGammaEnabled())
-            {
-                App::state.SetGammaEnabled(true);
-                App::SyncGammaToState();
-            }
-            else
-            {
-                // Gamma is already enabled, cycle to next profile.
-                ProfileManager::CycleProfile(1);
+                // Gamma is already enabled, cycle to the previous/next profile.
+                ProfileManager::CycleProfile(direction);
                 SyncUIWithCurrentProfile();
             }
             UI::SyncUIToState();
