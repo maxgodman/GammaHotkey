@@ -215,6 +215,9 @@ void RenderDeleteConfirmDialog()
             if (ImGui::Button("Yes", ImVec2(120, 0)))
             {
                 ProfileManager::DeleteProfile(UI::state.deleteProfileIndex);
+                ConfigManager::Save();
+                HotkeyManager::RegisterAll(App::mainWindow);
+
                 SyncUIWithCurrentProfile();
                 ImGui::CloseCurrentPopup();
                 UI::state.deleteProfileIndex = -1;
