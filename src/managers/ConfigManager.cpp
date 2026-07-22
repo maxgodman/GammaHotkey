@@ -17,7 +17,9 @@
 
 namespace ConfigManager
 {
-    // Thread safety mutex.
+    // Serializes Load() and Save(). Every caller runs on the UI thread today, so this
+    // never actually contends; it's kept only to keep config file I/O atomic if a save is
+    // ever moved off the UI thread. Not evidence of existing multi-threaded access.
     static std::mutex configMutex;
 
     // Config file section types.

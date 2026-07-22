@@ -166,8 +166,11 @@ bool EnforceSingleInstance()
             c = L'_';
     }
 
-    static HANDLE hMutex = nullptr;
-    hMutex = CreateMutexW(nullptr, FALSE, mutexName.c_str());
+    // Deliberately leaked on the success path: leaving this handle open is what keeps the
+    // named mutex owned for the process lifetime, so a second launch sees ERROR_ALREADY_EXISTS.
+    // A plain local suffices — the open handle holds the mutex, not the variable's storage
+    // duration, and Windows reclaims the handle when the process exits.
+    HANDLE hMutex = CreateMutexW(nullptr, FALSE, mutexName.c_str());
     if (!hMutex)
         return true;
 
@@ -182,7 +185,6 @@ bool EnforceSingleInstance()
             MB_OK | MB_ICONINFORMATION);
 
         CloseHandle(hMutex);
-        hMutex = nullptr;
         return false;
     }
 
