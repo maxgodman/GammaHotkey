@@ -23,6 +23,15 @@ static std::string LoadUIString(const UINT id)
     return StringUtils::WideToUTF8(std::wstring(buffer, len));
 }
 
+// Center a modal on the main window and keep it there every frame, so all dialogs open in the
+// middle and can't be dragged off-center (a drag just snaps back). Call immediately before
+// BeginPopupModal.
+static void CenterNextModal()
+{
+    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+}
+
 void RenderHotkeyCaptureDialog()
 {
     // Hotkey capture popup.
@@ -40,6 +49,7 @@ void RenderHotkeyCaptureDialog()
         }
     }
     
+    CenterNextModal();
     if (ImGui::BeginPopupModal("Capture Hotkey", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         // Check if we should close the popup.
@@ -117,6 +127,7 @@ void RenderAboutDialog()
         UI::state.showAboutDialog = false;
     }
 
+    CenterNextModal();
     if (ImGui::BeginPopupModal(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Text("%s", LoadUIString(IDS_ABOUT_VERSION).c_str());
@@ -147,6 +158,7 @@ void RenderHotkeyConflictDialog()
         UI::state.showHotkeyConflict = false;
     }
     
+    CenterNextModal();
     if (ImGui::BeginPopupModal("Hotkey Conflict", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Text("This hotkey is already assigned to:");
@@ -195,6 +207,7 @@ void RenderDeleteConfirmDialog()
         UI::state.showDeleteConfirm = false;
     }
     
+    CenterNextModal();
     if (ImGui::BeginPopupModal("Delete Profile", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         if (UI::state.deleteProfileIndex >= 0 && UI::state.deleteProfileIndex < (int)App::profiles.size())
