@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity type="win32" name="GammaHotkey" version="0.2.0.0" processorArchitecture="*"/>
+  <assemblyIdentity type="win32" name="GammaHotkey" version="1.0.0.0" processorArchitecture="*"/>
 
   <!-- Run with the user's normal privileges. No administrator elevation is required or requested. -->
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
