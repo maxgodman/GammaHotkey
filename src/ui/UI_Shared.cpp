@@ -470,7 +470,10 @@ void RenderModeToggleButton()
 void RenderTitleBar()
 {
     const ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    // Draw the title bar to the foreground draw list so it renders above the modal dim (which
+    // darkens the rest of the window while a dialog is open), keeping the title bar "untouched".
+    // Nothing overlaps this top strip, so drawing it foreground is visually identical otherwise.
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
     const ImVec2 windowPos = ImGui::GetWindowPos();
     const bool maximized = IsWindowMaximized(App::mainWindow);
 
@@ -485,17 +488,25 @@ void RenderTitleBar()
     const float aboutButtonWidth = 60.0f;
     const float buttonX = titleBarMax.x - (buttonWidth * 3) - aboutButtonWidth - 8;
 
-    ImGui::SetCursorScreenPos(ImVec2(buttonX, titleBarMin.y));
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
-    if (ImGui::Button("About##titlebar", ImVec2(aboutButtonWidth, UIConstants::TITLEBAR_HEIGHT)))
+    // The interaction is a plain (invisible) ImGui button so hover/press behavior is unchanged;
+    // the visual is drawn to the foreground draw list so it stays bright over the modal dim.
+    const ImVec2 aboutMin(buttonX, titleBarMin.y);
+    const ImVec2 aboutMax(buttonX + aboutButtonWidth, titleBarMin.y + UIConstants::TITLEBAR_HEIGHT);
+    ImGui::SetCursorScreenPos(aboutMin);
+    if (ImGui::InvisibleButton("About##titlebar", ImVec2(aboutButtonWidth, UIConstants::TITLEBAR_HEIGHT)))
     {
         UI::state.showAboutDialog = true;
     }
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor(3);
+    if (ImGui::IsItemActive())
+        drawList->AddRectFilled(aboutMin, aboutMax, IM_COL32(51, 51, 51, 255));
+    else if (ImGui::IsItemHovered())
+        drawList->AddRectFilled(aboutMin, aboutMax, IM_COL32(77, 77, 77, 255));
+
+    const char* aboutLabel = "About";
+    const ImVec2 aboutTextSize = ImGui::CalcTextSize(aboutLabel);
+    const ImVec2 aboutTextPos(aboutMin.x + (aboutButtonWidth - aboutTextSize.x) * 0.5f,
+                              aboutMin.y + (UIConstants::TITLEBAR_HEIGHT - aboutTextSize.y) * 0.5f);
+    drawList->AddText(aboutTextPos, ImGui::GetColorU32(ImGuiCol_Text), aboutLabel);
 
     // Window controls: minimize / maximize-restore / close, custom-drawn as non-client caption
     // buttons (WM_NCHITTEST reports HTMINBUTTON/HTMAXBUTTON/HTCLOSE and the WndProc runs the action
@@ -544,11 +555,12 @@ void RenderTitleBar()
         : IM_COL32(90, 92, 96, 255);    // Dim gray: gamma off.
     drawList->AddCircleFilled(indicatorCenter, indicatorRadius, indicatorColor);
 
-    // Title text (left side of title bar), positioned to the right of the indicator.
-    ImGui::SetCursorScreenPos(ImVec2(indicatorCenter.x + indicatorRadius + 8.0f, titleBarMin.y + 10.0f));
+    // Title text (left side of title bar), positioned to the right of the indicator. Drawn via the
+    // (foreground) draw list so it stays bright over the modal dim.
     const std::wstring statusTextWide = App::GetStatusText();
     const std::string statusText = StringUtils::WideToUTF8(statusTextWide);
-    ImGui::Text("%s", statusText.c_str());
+    const ImVec2 titleTextPos(indicatorCenter.x + indicatorRadius + 8.0f, titleBarMin.y + 10.0f);
+    drawList->AddText(titleTextPos, ImGui::GetColorU32(ImGuiCol_Text), statusText.c_str());
 
     // Publish the draggable region for WM_NCHITTEST to report as HTCAPTION, handing the drag to the
     // OS move loop. That restores Aero Snap, the taskbar peek (the window can no longer be stranded
@@ -586,7 +598,8 @@ void ApplyImGuiStyle()
     colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
     colors[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
     colors[ImGuiCol_ChildBg] = ImVec4(0.16f, 0.17f, 0.18f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.16f, 0.17f, 0.18f, 0.95f);
+    colors[ImGuiCol_PopupBg] = ImVec4(0.16f, 0.17f, 0.18f, 1.00f); // Fully opaque so dialogs don't show the UI through them.
+    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.50f); // Dark fade behind dialogs. The title bar draws to the foreground draw list (RenderTitleBar), so it stays above this.
     colors[ImGuiCol_Border] = ImVec4(0.25f, 0.25f, 0.28f, 0.50f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.21f, 0.22f, 1.00f);
