@@ -82,7 +82,6 @@ static void MoveProfileUp(int index)
 {
     if (index <= 0) return;
 
-    HotkeyManager::UnregisterAll(App::mainWindow);
     std::swap(App::profiles[index], App::profiles[index - 1]);
 
     if (App::selectedProfileIndex == index)
@@ -98,7 +97,6 @@ static void MoveProfileDown(int index)
 {
     if (index >= (int)App::profiles.size() - 1) return;
 
-    HotkeyManager::UnregisterAll(App::mainWindow);
     std::swap(App::profiles[index], App::profiles[index + 1]);
 
     if (App::selectedProfileIndex == index)
@@ -232,7 +230,6 @@ void RenderAdvancedUI()
                 App::workingProfile.name = StringUtils::UTF8ToWide(profileName);
 
                 int idx = ProfileManager::FindByName(App::workingProfile.name);
-                HotkeyManager::UnregisterAll(App::mainWindow);
 
                 if (idx >= 0)
                 {

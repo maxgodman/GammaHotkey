@@ -80,7 +80,6 @@ void RenderHotkeyCaptureDialog()
             SetHotkeyForCaptureTarget(0);
 
             ConfigManager::Save();
-            HotkeyManager::UnregisterAll(App::mainWindow);
             HotkeyManager::RegisterAll(App::mainWindow);
 
             UI::state.capturingHotkeyType = HotkeyCapture::NONE;
@@ -170,7 +169,6 @@ void RenderHotkeyConflictDialog()
             SetHotkeyForCaptureTarget(UI::state.conflictingHotkey);
 
             ConfigManager::Save();
-            HotkeyManager::UnregisterAll(App::mainWindow);
             HotkeyManager::RegisterAll(App::mainWindow);
 
             UI::state.capturingHotkeyType = HotkeyCapture::NONE;

@@ -38,7 +38,10 @@ namespace HotkeyManager
 
     void RegisterAll(const HWND hwnd)
     {
-        // Clear any existing registrations first.
+        // Start from a clean slate: unregister whatever is currently registered before
+        // registering the current set. Callers that change bindings can therefore just call
+        // RegisterAll; they do not need to UnregisterAll first (it tracks s_registeredIds, not
+        // the profiles vector, so it unregisters exactly what was registered regardless of order).
         UnregisterAll(hwnd);
 
         RegisterOne(hwnd, HotkeyIDs::TOGGLE, App::toggleHotkey);
