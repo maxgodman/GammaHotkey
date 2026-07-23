@@ -738,7 +738,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (newIndex >= 0)
                 App::selectedDisplayIndex = newIndex;
             else
-                App::selectedDisplayIndex = App::displays.empty() ? 0 : 0; // Fall back to the first display.
+                App::selectedDisplayIndex = 0; // Fall back to the first display.
         }
 
         // Re-apply current gamma so it reflects on the (possibly changed) selected display.
