@@ -548,9 +548,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 // remove the top non-client area that causes the white bar.
                 const LRESULT result = DefWindowProc(hWnd, message, wParam, lParam);
 
-                // Get the window's border thickness
-                const int borderThickness = GetSystemMetrics(SM_CXSIZEFRAME) +
-                    GetSystemMetrics(SM_CXPADDEDBORDER);
+                // Get the window's border thickness. GetSystemMetricsForDpi, not GetSystemMetrics:
+                // the latter reports values for the *system* DPI, frozen at process start, which is
+                // wrong by construction for a per-monitor-V2 app whose window can sit on a monitor
+                // at a different scale.
+                const UINT dpi = GetDpiForWindow(hWnd);
+                const int borderThickness = GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi) +
+                    GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 
                 // Restore the top edge (removes the title bar space).
                 params->rgrc[0].top = params->rgrc[0].top - borderThickness;
@@ -593,10 +597,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // dragging.
         if (!maximized)
         {
-            const int borderWidth = GetSystemMetrics(SM_CXSIZEFRAME) +
-                GetSystemMetrics(SM_CXPADDEDBORDER);
-            const int borderHeight = GetSystemMetrics(SM_CYSIZEFRAME) +
-                GetSystemMetrics(SM_CXPADDEDBORDER);
+            // Per-monitor metrics, matching WM_NCCALCSIZE above: the resize handles have to be the
+            // same thickness the frame calculation reserved, on whichever monitor the window is on.
+            const UINT dpi = GetDpiForWindow(hWnd);
+            const int borderWidth = GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi) +
+                GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+            const int borderHeight = GetSystemMetricsForDpi(SM_CYSIZEFRAME, dpi) +
+                GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 
             const bool onLeft = point.x < borderWidth;
             const bool onRight = point.x >= rect.right - borderWidth;
