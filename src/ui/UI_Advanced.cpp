@@ -134,11 +134,16 @@ void RenderAdvancedUI()
 
     RenderTitleBar();
 
-    ImGui::SetCursorPosY(UIConstants::TITLEBAR_HEIGHT);
+    const float titleBarHeight = GetTitleBarHeight();
+    ImGui::SetCursorPosY(titleBarHeight);
 
-    const float contentHeight = io.DisplaySize.y - UIConstants::TITLEBAR_HEIGHT;
+    const float contentHeight = io.DisplaySize.y - titleBarHeight;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(UIConstants::CONTENT_PADDING_X, UIConstants::CONTENT_PADDING_Y));
+    // CONTENT_PADDING_* is a raw literal pushed at runtime, so style.ScaleAllSizes() never sees it
+    // (unlike the style.WindowPadding set in ApplyImGuiStyle) and it has to be scaled here.
+    const float dpiScale = App::GetDpiScale();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,
+        ImVec2(UIConstants::CONTENT_PADDING_X * dpiScale, UIConstants::CONTENT_PADDING_Y * dpiScale));
 
     if (ImGui::BeginChild("MainContent", ImVec2(0, contentHeight)))
     {
@@ -452,7 +457,9 @@ void RenderAdvancedUI()
                 ImGui::SetTooltip("Hotkey to switch to the next profile in the list");
             }
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(UIConstants::CHECKBOX_INNERSPACING, ImGui::GetStyle().ItemInnerSpacing.y));
+            // Only the x needs the factor; the y comes from the already-scaled style.
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing,
+                ImVec2(UIConstants::CHECKBOX_INNERSPACING * dpiScale, ImGui::GetStyle().ItemInnerSpacing.y));
             ImGui::Checkbox("Loop profile list", &App::loopProfiles);
             ImGui::PopStyleVar();
             if (ImGui::IsItemHovered())

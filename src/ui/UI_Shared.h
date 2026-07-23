@@ -28,6 +28,18 @@ void RenderGammaSlider(Profile& profile, bool advancedMode);
 void RenderModeToggleButton();
 
 /**
+ * @brief The title bar height in physical pixels: UIConstants::TITLEBAR_HEIGHT scaled by
+ *        App::GetDpiScale().
+ *
+ * Three things have to agree on this number, and they live in three different files: the bar
+ * RenderTitleBar draws, the non-client hit-test rects it publishes for WM_NCHITTEST, and the
+ * offset at which each mode starts laying out its content. They all read it from here rather than
+ * each multiplying the constant themselves, so a caption button can never be drawn somewhere
+ * other than where it is clickable.
+ */
+float GetTitleBarHeight();
+
+/**
  * @brief Renders the title bar.
  */
 void RenderTitleBar();

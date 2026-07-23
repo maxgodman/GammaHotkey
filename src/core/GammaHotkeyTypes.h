@@ -99,6 +99,9 @@ namespace AppConstants
     constexpr int DEFAULT_ADVANCED_WINDOWSIZE_Y = 660;
 }
 
+// UI metrics in logical (96 DPI / 100% scaling) pixels. These are our own literals, not ImGui
+// style values, so style.ScaleAllSizes() does not touch them - every use site multiplies by
+// App::GetDpiScale() itself (TITLEBAR_HEIGHT via the shared GetTitleBarHeight()).
 namespace UIConstants
 {
     constexpr float TITLEBAR_HEIGHT = 32.0f;

@@ -41,9 +41,11 @@ enum class CaptionButton { Minimize, MaximizeRestore, Close };
  *        RenderTitleBar rather than from ImGui, because these buttons are non-client and ImGui
  *        never sees the mouse over them.
  * @param maximized Selects the Restore glyph (two offset squares) over the Maximize glyph.
+ * @param dpiScale Factor for the glyph metrics below. Passed in rather than queried here so the
+ *        whole title bar is drawn from the one value RenderTitleBar sampled for this frame.
  */
 static void DrawCaptionButton(ImDrawList* dl, const CaptionButton kind, const ImVec2& bmin,
-    const ImVec2& bmax, const bool hovered, const bool maximized)
+    const ImVec2& bmax, const bool hovered, const bool maximized, const float dpiScale)
 {
     if (hovered)
     {
@@ -55,8 +57,9 @@ static void DrawCaptionButton(ImDrawList* dl, const CaptionButton kind, const Im
 
     const ImVec2 c((bmin.x + bmax.x) * 0.5f, (bmin.y + bmax.y) * 0.5f);
     const ImU32 fg = IM_COL32(230, 230, 230, 255);
-    const float t = 1.0f;  // Glyph stroke thickness.
-    const float r = 5.0f;  // Glyph half-extent.
+    const float t = 1.0f * dpiScale;  // Glyph stroke thickness.
+    const float r = 5.0f * dpiScale;  // Glyph half-extent.
+    const float inset = 2.0f * dpiScale;  // Offset between the Restore glyph's two squares.
 
     switch (kind)
     {
@@ -67,8 +70,8 @@ static void DrawCaptionButton(ImDrawList* dl, const CaptionButton kind, const Im
         if (maximized)
         {
             // Restore: a back square peeking out up-and-right behind a front square.
-            dl->AddRect(ImVec2(c.x - r + 2, c.y - r), ImVec2(c.x + r, c.y + r - 2), fg, 0.0f, 0, t);
-            dl->AddRect(ImVec2(c.x - r, c.y - r + 2), ImVec2(c.x + r - 2, c.y + r), fg, 0.0f, 0, t);
+            dl->AddRect(ImVec2(c.x - r + inset, c.y - r), ImVec2(c.x + r, c.y + r - inset), fg, 0.0f, 0, t);
+            dl->AddRect(ImVec2(c.x - r, c.y - r + inset), ImVec2(c.x + r - inset, c.y + r), fg, 0.0f, 0, t);
         }
         else
         {
@@ -252,7 +255,10 @@ void RenderDisplayComboBox()
 
 void RenderOptionsCheckboxes()
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(UIConstants::CHECKBOX_INNERSPACING, ImGui::GetStyle().ItemInnerSpacing.y));
+    // Only the x needs the factor: the y is read back from the style, which ScaleAllSizes() has
+    // already scaled, while CHECKBOX_INNERSPACING is our own literal.
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing,
+        ImVec2(UIConstants::CHECKBOX_INNERSPACING * App::GetDpiScale(), ImGui::GetStyle().ItemInnerSpacing.y));
     if (ImGui::Checkbox("Run in background when closed", &App::minimizeToTray))
     {
         ConfigManager::Save();
@@ -467,9 +473,18 @@ void RenderModeToggleButton()
     ImGui::PopStyleVar(2);
 }
 
+float GetTitleBarHeight()
+{
+    return UIConstants::TITLEBAR_HEIGHT * App::GetDpiScale();
+}
+
 void RenderTitleBar()
 {
     const ImGuiIO& io = ImGui::GetIO();
+    // Sampled once per frame and threaded through everything below, so the drawn geometry and the
+    // hit-test rects published at the end cannot be computed from two different factors.
+    const float dpiScale = App::GetDpiScale();
+    const float titleBarHeight = GetTitleBarHeight();
     // Draw the title bar to the foreground draw list so it renders above the modal dim (which
     // darkens the rest of the window while a dialog is open), keeping the title bar "untouched".
     // Nothing overlaps this top strip, so drawing it foreground is visually identical otherwise.
@@ -479,21 +494,26 @@ void RenderTitleBar()
 
     // Title bar background.
     const ImVec2 titleBarMin = windowPos;
-    const ImVec2 titleBarMax = ImVec2(windowPos.x + io.DisplaySize.x, windowPos.y + UIConstants::TITLEBAR_HEIGHT);
+    const ImVec2 titleBarMax = ImVec2(windowPos.x + io.DisplaySize.x, windowPos.y + titleBarHeight);
     drawList->AddRectFilled(titleBarMin, titleBarMax, IM_COL32(10, 11, 12, 255));
 
     // About button (left of the window controls), kept as a normal ImGui button so it stays
     // HTCLIENT and ImGui handles its click.
-    const float buttonWidth = 46.0f;
-    const float aboutButtonWidth = 60.0f;
-    const float buttonX = titleBarMax.x - (buttonWidth * 3) - aboutButtonWidth - 8;
+    const float buttonWidth = 46.0f * dpiScale;
+    const char* aboutLabel = "About";
+    const ImVec2 aboutTextSize = ImGui::CalcTextSize(aboutLabel);
+    // Wide enough for the label plus breathing room, never narrower than the nominal 60px. Derived
+    // from the measured text rather than fixed, so it also survives a change of UI font (which
+    // scales the text but not a literal) rather than clipping.
+    const float aboutButtonWidth = ImMax(60.0f * dpiScale, aboutTextSize.x + 20.0f * dpiScale);
+    const float buttonX = titleBarMax.x - (buttonWidth * 3) - aboutButtonWidth - 8.0f * dpiScale;
 
     // The interaction is a plain (invisible) ImGui button so hover/press behavior is unchanged;
     // the visual is drawn to the foreground draw list so it stays bright over the modal dim.
     const ImVec2 aboutMin(buttonX, titleBarMin.y);
-    const ImVec2 aboutMax(buttonX + aboutButtonWidth, titleBarMin.y + UIConstants::TITLEBAR_HEIGHT);
+    const ImVec2 aboutMax(buttonX + aboutButtonWidth, titleBarMin.y + titleBarHeight);
     ImGui::SetCursorScreenPos(aboutMin);
-    if (ImGui::InvisibleButton("About##titlebar", ImVec2(aboutButtonWidth, UIConstants::TITLEBAR_HEIGHT)))
+    if (ImGui::InvisibleButton("About##titlebar", ImVec2(aboutButtonWidth, titleBarHeight)))
     {
         UI::state.showAboutDialog = true;
     }
@@ -502,10 +522,8 @@ void RenderTitleBar()
     else if (ImGui::IsItemHovered())
         drawList->AddRectFilled(aboutMin, aboutMax, IM_COL32(77, 77, 77, 255));
 
-    const char* aboutLabel = "About";
-    const ImVec2 aboutTextSize = ImGui::CalcTextSize(aboutLabel);
     const ImVec2 aboutTextPos(aboutMin.x + (aboutButtonWidth - aboutTextSize.x) * 0.5f,
-                              aboutMin.y + (UIConstants::TITLEBAR_HEIGHT - aboutTextSize.y) * 0.5f);
+                              aboutMin.y + (titleBarHeight - aboutTextSize.y) * 0.5f);
     drawList->AddText(aboutTextPos, ImGui::GetColorU32(ImGuiCol_Text), aboutLabel);
 
     // Window controls: minimize / maximize-restore / close, custom-drawn as non-client caption
@@ -528,7 +546,7 @@ void RenderTitleBar()
     for (const auto& ctrl : controls)
     {
         const ImVec2 bmin(ctrl.left, titleBarMin.y);
-        const ImVec2 bmax(ctrl.left + buttonWidth, titleBarMin.y + UIConstants::TITLEBAR_HEIGHT);
+        const ImVec2 bmax(ctrl.left + buttonWidth, titleBarMin.y + titleBarHeight);
 
         // Client-space rect for the WndProc hit test. windowPos is (0,0) for the main window, but
         // subtract it so this holds regardless of where the ImGui window sits.
@@ -541,15 +559,15 @@ void RenderTitleBar()
             cursor.x >= ctrl.out->left && cursor.x < ctrl.out->right &&
             cursor.y >= ctrl.out->top && cursor.y < ctrl.out->bottom;
 
-        DrawCaptionButton(drawList, ctrl.kind, bmin, bmax, hovered, maximized);
+        DrawCaptionButton(drawList, ctrl.kind, bmin, bmax, hovered, maximized, dpiScale);
     }
 
     // On/Off indicator: a small filled circle on the left of the title bar reflecting whether
     // gamma is currently applied. Read straight from state here because ImGui is immediate-mode
     // and this repaints every frame; nothing needs to push updates to it.
-    const float indicatorRadius = ImMax(3.0f, UIConstants::TITLEBAR_HEIGHT * 0.14f);
-    const ImVec2 indicatorCenter = ImVec2(titleBarMin.x + 10.0f + indicatorRadius,
-                                          titleBarMin.y + UIConstants::TITLEBAR_HEIGHT * 0.5f);
+    const float indicatorRadius = ImMax(3.0f * dpiScale, titleBarHeight * 0.14f);
+    const ImVec2 indicatorCenter = ImVec2(titleBarMin.x + 10.0f * dpiScale + indicatorRadius,
+                                          titleBarMin.y + titleBarHeight * 0.5f);
     const ImU32 indicatorColor = App::state.IsGammaEnabled()
         ? IM_COL32(80, 200, 120, 255)   // Green-ish: gamma on.
         : IM_COL32(90, 92, 96, 255);    // Dim gray: gamma off.
@@ -559,7 +577,11 @@ void RenderTitleBar()
     // (foreground) draw list so it stays bright over the modal dim.
     const std::wstring statusTextWide = App::GetStatusText();
     const std::string statusText = StringUtils::WideToUTF8(statusTextWide);
-    const ImVec2 titleTextPos(indicatorCenter.x + indicatorRadius + 8.0f, titleBarMin.y + 10.0f);
+    // Centered against the bar rather than nudged down by a fixed offset, matching the About
+    // label above: the text height grows with both DPI and the UI font, so a literal would drift
+    // off-centre at every scale but the one it was tuned at.
+    const ImVec2 titleTextPos(indicatorCenter.x + indicatorRadius + 8.0f * dpiScale,
+                              titleBarMin.y + (titleBarHeight - ImGui::GetTextLineHeight()) * 0.5f);
     drawList->AddText(titleTextPos, ImGui::GetColorU32(ImGuiCol_Text), statusText.c_str());
 
     // Publish the draggable region for WM_NCHITTEST to report as HTCAPTION, handing the drag to the
@@ -568,7 +590,7 @@ void RenderTitleBar()
     // handling here. The strip runs from the left edge to buttonX; the button cluster to its right
     // stays HTCLIENT so ImGui keeps its clicks. buttonX and windowPos are ImGui screen coordinates;
     // for the main window (pinned at 0,0) those equal the client coordinates WM_NCHITTEST uses.
-    UI::state.titleBar.captionBottom = (int)UIConstants::TITLEBAR_HEIGHT;
+    UI::state.titleBar.captionBottom = (int)titleBarHeight;
     UI::state.titleBar.dragRight = (int)(buttonX - windowPos.x);
     UI::state.titleBar.valid = true;
 }

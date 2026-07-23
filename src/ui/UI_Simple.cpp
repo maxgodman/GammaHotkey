@@ -36,11 +36,16 @@ void RenderSimpleUI()
     RenderTitleBar();
 
     // Content area.
-    ImGui::SetCursorPosY(UIConstants::TITLEBAR_HEIGHT);
+    const float titleBarHeight = GetTitleBarHeight();
+    ImGui::SetCursorPosY(titleBarHeight);
 
-    const float contentHeight = io.DisplaySize.y - UIConstants::TITLEBAR_HEIGHT;
+    const float contentHeight = io.DisplaySize.y - titleBarHeight;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(UIConstants::CONTENT_PADDING_X, UIConstants::CONTENT_PADDING_Y));
+    // CONTENT_PADDING_* is a raw literal pushed at runtime, so style.ScaleAllSizes() never sees it
+    // (unlike the style.WindowPadding set in ApplyImGuiStyle) and it has to be scaled here.
+    const float dpiScale = App::GetDpiScale();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,
+        ImVec2(UIConstants::CONTENT_PADDING_X * dpiScale, UIConstants::CONTENT_PADDING_Y * dpiScale));
 
     if (ImGui::BeginChild("SimpleContent", ImVec2(0, contentHeight), ImGuiChildFlags_AlwaysUseWindowPadding))
     {
