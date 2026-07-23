@@ -67,6 +67,16 @@ namespace App
         UI::SyncUIToState();
     }
 
+    float GetDpiScale()
+    {
+        // Per-monitor V2, so the factor must come from the window's *current* monitor rather than
+        // the system DPI - the two differ on a mixed-DPI setup, and the system value is frozen at
+        // process start. Before the window exists GetDpiForWindow would return 0 for the null
+        // handle, so fall back to the system DPI: a caller can then never scale by zero.
+        const UINT dpi = mainWindow ? GetDpiForWindow(mainWindow) : GetDpiForSystem();
+        return dpi / 96.0f;  // 96 DPI is 100% scaling.
+    }
+
     int GetDesiredWindowSizeX()
     {
         return App::state.IsAdvancedModeEnabled() ? AppConstants::DEFAULT_ADVANCED_WINDOWSIZE_X : AppConstants::DEFAULT_SIMPLE_WINDOWSIZE_X;

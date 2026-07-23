@@ -656,9 +656,8 @@ void DrawGammaCurve()
     // Scale the hardcoded pixel metrics below by the window's DPI so the graph keeps the same
     // visual proportions at any scale. GetContentRegionAvail() is already in physical pixels (it
     // reflects the DPI-scaled window and style), so only these literals need the factor. At 100%
-    // DPI the factor is 1.0, leaving every size unchanged. GetDpiForWindow is the authoritative
-    // per-monitor-V2 source, matching how ImGui_Integration derives its own scale.
-    const float dpiScale = GetDpiForWindow(App::mainWindow) / 96.0f;
+    // DPI the factor is 1.0, leaving every size unchanged.
+    const float dpiScale = App::GetDpiScale();
     const float minCanvasWidth = 150.0f * dpiScale;
     const float minCanvasHeight = 100.0f * dpiScale;
     const float lineThickness = 1.0f * dpiScale;

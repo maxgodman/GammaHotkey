@@ -2,6 +2,7 @@
 
 #include "framework.h"
 #include "ImGui_Integration.h"
+#include "AppGlobals.h"
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
@@ -44,9 +45,11 @@ bool ImGuiRenderer::Initialize(const HWND hwnd)
     // Apply custom style.
     ApplyImGuiStyle();
 
-    // Apply DPI scaling after style, so it scales everything.
-    const UINT dpi = GetDpiForWindow(hwnd);
-    const float scale = dpi / 96.0f;  // 96 DPI is 100% scaling.
+    // Apply DPI scaling after style, so it scales everything. App::GetDpiScale() is the shared
+    // source for the factor (hwnd is already published as App::mainWindow by the time WM_CREATE
+    // constructs the renderer), so the style metrics scale by exactly the same number the UI code
+    // uses for its own pixel literals.
+    const float scale = App::GetDpiScale();
     ImGuiStyle& style = ImGui::GetStyle();
     style.ScaleAllSizes(scale);   // Scale style metrics (paddings/spacings/borders).
     // Rasterize the font crisp at the actual DPI. FontScaleDpi is ImGui 1.92's per-monitor
@@ -115,10 +118,12 @@ void ImGuiRenderer::OnDpiChanged(const UINT newDpi)
 {
     if (!m_initialized)
         return;
-    
-    // Calculate new scale.
+
+    // Calculate new scale. This is the one place that must *not* go through App::GetDpiScale():
+    // WM_DPICHANGED carries the authoritative new DPI in its wParam, so use that rather than
+    // re-querying the window.
     const float newScale = newDpi / 96.0f;
-    
+
     // Get current style.
     ImGuiStyle& style = ImGui::GetStyle();
     
