@@ -16,11 +16,15 @@
 
 /**
  * @brief Helper for read-only hotkey display.
+ * @param labelWidth Width of the shared label column, measured by the caller from the longest of
+ *        the labels it renders so every row's input field starts at the same x. It cannot be a
+ *        constant: the label text grows with both the DPI factor and the UI font, so any fixed
+ *        width is eventually overrun and collides with the input field.
  */
-static void RenderHotkeyDisplay(const char* label, const char* id, UINT hotkey, HotkeyCapture captureType)
+static void RenderHotkeyDisplay(const char* label, const char* id, UINT hotkey, HotkeyCapture captureType,
+                                const float labelWidth)
 {
-    const float labelWidth = 135.0f;
-    const float buttonWidth = 50.0f;
+    const float buttonWidth = GetScaledButtonWidth("Set", 50.0f);
     const float spacing = ImGui::GetStyle().ItemSpacing.x;
 
     // Calculate input width: total minus label, button, and one spacing gap.
@@ -148,7 +152,7 @@ void RenderAdvancedUI()
     if (ImGui::BeginChild("MainContent", ImVec2(0, contentHeight)))
     {
         const float availableWidth = ImGui::GetContentRegionAvail().x;
-        const float separatorWidth = 1.0f;
+        const float separatorWidth = 1.0f * dpiScale;
         const float columnWidth = (availableWidth - separatorWidth) / 2.0f;
 
         // Left column.
@@ -172,7 +176,7 @@ void RenderAdvancedUI()
             strncpy_s(hotkeyBuf, UI::state.profileHotkeyBuffer, sizeof(hotkeyBuf) - 1);
             hotkeyBuf[sizeof(hotkeyBuf) - 1] = '\0';
 
-            const float buttonWidth = 50.0f;
+            const float buttonWidth = GetScaledButtonWidth("Set", 50.0f);
             const float spacing = ImGui::GetStyle().ItemSpacing.x;
 
             ImGui::BeginDisabled();
@@ -279,7 +283,7 @@ void RenderAdvancedUI()
             ImGui::Separator();
 
             // Profile list.
-            if (ImGui::BeginChild("ProfileList", ImVec2(0, 200), ImGuiChildFlags_Borders))
+            if (ImGui::BeginChild("ProfileList", ImVec2(0, 200.0f * dpiScale), ImGuiChildFlags_Borders))
             {
                 for (int i = 0; i < (int)App::profiles.size(); ++i)
                 {
@@ -386,7 +390,17 @@ void RenderAdvancedUI()
                         // Draw overlay buttons when row is hovered.
                         if (rowHovered)
                         {
-                            ImGui::SameLine(fullWidth - 70);
+                            // Right-align the up/down/delete cluster by measuring it rather than
+                            // reserving a fixed width, which under-reserves once the glyphs and
+                            // frame padding scale and pushes the buttons off the row. All three
+                            // labels are single characters in a monospace font, so one measurement
+                            // covers each of them.
+                            const float overlayGap = 2.0f * dpiScale;
+                            const float overlayButtonWidth = ImGui::CalcTextSize("X").x +
+                                ImGui::GetStyle().FramePadding.x * 2.0f;
+                            const float overlayWidth = overlayButtonWidth * 3.0f + overlayGap * 2.0f;
+
+                            ImGui::SameLine(fullWidth - overlayWidth);
 
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 0.8f));
                             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
@@ -399,7 +413,7 @@ void RenderAdvancedUI()
                             }
                             ImGui::EndDisabled();
 
-                            ImGui::SameLine(0, 2);
+                            ImGui::SameLine(0, overlayGap);
 
                             ImGui::BeginDisabled(i >= (int)App::profiles.size() - 1);
                             if (ImGui::SmallButton("v##down"))
@@ -408,7 +422,7 @@ void RenderAdvancedUI()
                             }
                             ImGui::EndDisabled();
 
-                            ImGui::SameLine(0, 2);
+                            ImGui::SameLine(0, overlayGap);
 
                             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.0f));
                             if (ImGui::SmallButton("X##delete"))
@@ -439,19 +453,30 @@ void RenderAdvancedUI()
             ImGui::Text("Global Hotkeys");
             ImGui::Separator();
 
-            RenderHotkeyDisplay("Toggle On/Off:", "##ToggleHotkey", App::toggleHotkey, HotkeyCapture::TOGGLE);
+            // The three rows share one label column so their input fields line up. Measure it from
+            // the widest of the labels actually rendered below, so it tracks the font and DPI
+            // instead of being tuned once and then colliding at every other size.
+            const char* const toggleLabel = "Toggle On/Off:";
+            const char* const prevLabel = "Previous Profile:";
+            const char* const nextLabel = "Next Profile:";
+            const float hotkeyLabelWidth = ImMax(ImGui::CalcTextSize(toggleLabel).x,
+                                            ImMax(ImGui::CalcTextSize(prevLabel).x,
+                                                  ImGui::CalcTextSize(nextLabel).x))
+                                         + ImGui::GetStyle().ItemSpacing.x;
+
+            RenderHotkeyDisplay(toggleLabel, "##ToggleHotkey", App::toggleHotkey, HotkeyCapture::TOGGLE, hotkeyLabelWidth);
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Hotkey to toggle gamma adjustments on/off");
             }
 
-            RenderHotkeyDisplay("Previous Profile:", "##PrevHotkey", App::previousProfileHotkey, HotkeyCapture::PREVIOUS_PROFILE);
+            RenderHotkeyDisplay(prevLabel, "##PrevHotkey", App::previousProfileHotkey, HotkeyCapture::PREVIOUS_PROFILE, hotkeyLabelWidth);
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Hotkey to switch to the previous profile in the list");
             }
 
-            RenderHotkeyDisplay("Next Profile:", "##NextHotkey", App::nextProfileHotkey, HotkeyCapture::NEXT_PROFILE);
+            RenderHotkeyDisplay(nextLabel, "##NextHotkey", App::nextProfileHotkey, HotkeyCapture::NEXT_PROFILE, hotkeyLabelWidth);
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Hotkey to switch to the next profile in the list");

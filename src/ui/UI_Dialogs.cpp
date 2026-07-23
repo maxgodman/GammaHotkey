@@ -15,6 +15,8 @@
 
 extern HINSTANCE hInst;
 
+static constexpr float DIALOG_BUTTON_WIDTH = 120.0f;
+
 // Load a string-table entry and convert it to UTF-8 for ImGui.
 static std::string LoadUIString(const UINT id)
 {
@@ -84,7 +86,7 @@ void RenderHotkeyCaptureDialog()
 
         ImGui::Spacing();
 
-        if (ImGui::Button("Clear", ImVec2(120, 0)))
+        if (ImGui::Button("Clear", ImVec2(GetScaledButtonWidth("Clear", DIALOG_BUTTON_WIDTH), 0)))
         {
             // 0 clears the binding.
             SetHotkeyForCaptureTarget(0);
@@ -98,7 +100,7 @@ void RenderHotkeyCaptureDialog()
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        if (ImGui::Button("Cancel", ImVec2(GetScaledButtonWidth("Cancel", DIALOG_BUTTON_WIDTH), 0)))
         {
             UI::state.capturingHotkeyType = HotkeyCapture::NONE;
             ImGui::CloseCurrentPopup();
@@ -145,9 +147,10 @@ void RenderAboutDialog()
         ImGui::TextDisabled("%s", LoadUIString(IDS_ABOUT_THIRDPARTY).c_str());
         ImGui::Spacing();
 
-        const float buttonWidth = 120.0f;
+        const std::string okLabel = LoadUIString(IDS_ABOUT_OK);
+        const float buttonWidth = GetScaledButtonWidth(okLabel.c_str(), DIALOG_BUTTON_WIDTH);
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - buttonWidth) * 0.5f);
-        if (ImGui::Button(LoadUIString(IDS_ABOUT_OK).c_str(), ImVec2(buttonWidth, 0)))
+        if (ImGui::Button(okLabel.c_str(), ImVec2(buttonWidth, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
@@ -180,7 +183,7 @@ void RenderHotkeyConflictDialog()
         ImGui::Separator();
         ImGui::Spacing();
         
-        if (ImGui::Button("Yes", ImVec2(120, 0)))
+        if (ImGui::Button("Yes", ImVec2(GetScaledButtonWidth("Yes", DIALOG_BUTTON_WIDTH), 0)))
         {
             // Free the key from its previous owner, then bind it to the action being captured.
             ClearConflictingHotkey(UI::state.conflictingHotkey);
@@ -195,7 +198,7 @@ void RenderHotkeyConflictDialog()
 
         ImGui::SameLine();
 
-        if (ImGui::Button("No", ImVec2(120, 0)))
+        if (ImGui::Button("No", ImVec2(GetScaledButtonWidth("No", DIALOG_BUTTON_WIDTH), 0)))
         {
             UI::state.capturingHotkeyType = HotkeyCapture::NONE;
             ImGui::CloseCurrentPopup();
@@ -229,7 +232,7 @@ void RenderDeleteConfirmDialog()
             ImGui::Separator();
             ImGui::Spacing();
             
-            if (ImGui::Button("Yes", ImVec2(120, 0)))
+            if (ImGui::Button("Yes", ImVec2(GetScaledButtonWidth("Yes", DIALOG_BUTTON_WIDTH), 0)))
             {
                 ProfileManager::DeleteProfile(UI::state.deleteProfileIndex);
                 ConfigManager::Save();
@@ -242,7 +245,7 @@ void RenderDeleteConfirmDialog()
             
             ImGui::SameLine();
             
-            if (ImGui::Button("No", ImVec2(120, 0)))
+            if (ImGui::Button("No", ImVec2(GetScaledButtonWidth("No", DIALOG_BUTTON_WIDTH), 0)))
             {
                 ImGui::CloseCurrentPopup();
                 UI::state.deleteProfileIndex = -1;
@@ -295,7 +298,7 @@ void RenderStartupShortcutErrorDialog()
         ImGui::Separator();
         ImGui::Spacing();
 
-        const float buttonWidth = 120.0f;
+        const float buttonWidth = GetScaledButtonWidth("OK", DIALOG_BUTTON_WIDTH);
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - buttonWidth) * 0.5f);
         if (ImGui::Button("OK", ImVec2(buttonWidth, 0)))
         {

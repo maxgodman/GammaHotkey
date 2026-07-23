@@ -72,7 +72,7 @@ void RenderSimpleUI()
 
         const std::string toggleKeyName = StringUtils::WideToUTF8(StringUtils::VkToName(App::toggleHotkey));
 
-        const float buttonWidth = 50.0f;
+        const float buttonWidth = GetScaledButtonWidth("Set", 50.0f);
         const float spacing = ImGui::GetStyle().ItemSpacing.x;
 
         // Display as text in a frame.
