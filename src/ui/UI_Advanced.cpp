@@ -227,7 +227,14 @@ void RenderAdvancedUI()
             ImGui::BeginDisabled(!canSave);
             if (ImGui::Button(saveButtonText, ImVec2(saveUndoButtonWidth, 0)))
             {
-                App::workingProfile.name = StringUtils::UTF8ToWide(profileName);
+                // Sanitize on entry with the same rules Load() applies, so the stored name can't
+                // silently change on the next save->load round-trip. Reflect the result back into
+                // the input field so what's shown matches what actually gets saved.
+                const std::wstring sanitizedName =
+                    ConfigManager::SanitizeProfileName(StringUtils::UTF8ToWide(profileName));
+                App::workingProfile.name = sanitizedName;
+                strncpy_s(UI::state.profileNameBuffer, sizeof(UI::state.profileNameBuffer),
+                    StringUtils::WideToUTF8(sanitizedName).c_str(), _TRUNCATE);
 
                 int idx = ProfileManager::FindByName(App::workingProfile.name);
 

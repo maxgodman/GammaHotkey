@@ -4,8 +4,21 @@
 
 #pragma once
 
+#include <string>
+
 namespace ConfigManager
 {
+    /**
+     * @brief Strip characters that would corrupt the ini round-trip from a profile name.
+     *
+     * Trims surrounding whitespace and replaces the ini-structural characters
+     * (`\r \n \t [ ] = # ;`) with underscores, falling back to "Unnamed Profile" if nothing
+     * is left.
+     *
+     * @return the sanitized name.
+     */
+    std::wstring SanitizeProfileName(const std::wstring& name);
+
     /**
      * @brief Load configuration from ini file.
      * 

@@ -113,8 +113,7 @@ namespace ConfigManager
                                    ProfileRange::GAMMA_MIN, ProfileRange::GAMMA_MAX);
     }
 
-    // Sanitize profile name by removing problematic characters.
-    static std::wstring SanitizeProfileName(const std::wstring& name)
+    std::wstring SanitizeProfileName(const std::wstring& name)
     {
         std::wstring sanitized = name;
         
