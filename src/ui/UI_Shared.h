@@ -28,6 +28,21 @@ void RenderGammaSlider(Profile& profile, bool advancedMode);
 void RenderModeToggleButton();
 
 /**
+ * @brief Width for a button carrying @p label: its nominal design width scaled for DPI, but never
+ *        narrower than the label actually needs.
+ * @param label Button text, measured with the current font. Any "##id" suffix must be stripped
+ *        first - only pass the part that is drawn.
+ * @param nominalWidth The button's design width in logical (96 DPI) pixels.
+ *
+ * A plain literal breaks in two independent ways: the DPI factor scales the text but not the
+ * literal, and so does a change of UI font. Both showed up as clipped button labels. Scaling the
+ * nominal width fixes the first; the measured floor fixes the second and guarantees the label
+ * fits whatever happens. At 100% with a label that fits, this returns the nominal width, so
+ * buttons keep exactly the proportions they were designed with.
+ */
+float GetScaledButtonWidth(const char* label, const float nominalWidth);
+
+/**
  * @brief The title bar height in physical pixels: UIConstants::TITLEBAR_HEIGHT scaled by
  *        App::GetDpiScale().
  *

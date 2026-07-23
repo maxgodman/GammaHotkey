@@ -426,10 +426,10 @@ void RenderModeToggleButton()
     // cluster (button, its background window and its outline) stays at 100% size while the label
     // inside grows with the font, and the text clips.
     const float dpiScale = App::GetDpiScale();
-    // Wide enough for the longer of the two labels it alternates between, so the button never has
-    // to resize as the mode changes and the text cannot clip at any font size or scale.
-    const float labelWidth = ImMax(ImGui::CalcTextSize("Advanced").x, ImGui::CalcTextSize("Simple").x);
-    const float buttonWidth = ImMax(90.0f * dpiScale, labelWidth + ImGui::GetStyle().FramePadding.x * 2.0f);
+    // Sized for the longer of the two labels it alternates between, so the button does not change
+    // width when the mode is switched.
+    const float buttonWidth = ImMax(GetScaledButtonWidth("Advanced", 90.0f),
+                                    GetScaledButtonWidth("Simple", 90.0f));
     const float buttonHeight = 28.0f * dpiScale;
     const float rightMargin = 8.0f * dpiScale;         // Gap from the parent window's right edge.
     const float topMargin = 2.0f * dpiScale;           // Gap below the title bar.
@@ -482,6 +482,12 @@ void RenderModeToggleButton()
     ImGui::PopStyleVar(2);
 }
 
+float GetScaledButtonWidth(const char* label, const float nominalWidth)
+{
+    return ImMax(nominalWidth * App::GetDpiScale(),
+                 ImGui::CalcTextSize(label).x + ImGui::GetStyle().FramePadding.x * 2.0f);
+}
+
 float GetTitleBarHeight()
 {
     return UIConstants::TITLEBAR_HEIGHT * App::GetDpiScale();
@@ -511,10 +517,7 @@ void RenderTitleBar()
     const float buttonWidth = 46.0f * dpiScale;
     const char* aboutLabel = "About";
     const ImVec2 aboutTextSize = ImGui::CalcTextSize(aboutLabel);
-    // Wide enough for the label plus breathing room, never narrower than the nominal 60px. Derived
-    // from the measured text rather than fixed, so it also survives a change of UI font (which
-    // scales the text but not a literal) rather than clipping.
-    const float aboutButtonWidth = ImMax(60.0f * dpiScale, aboutTextSize.x + 20.0f * dpiScale);
+    const float aboutButtonWidth = GetScaledButtonWidth(aboutLabel, 60.0f);
     const float buttonX = titleBarMax.x - (buttonWidth * 3) - aboutButtonWidth - 8.0f * dpiScale;
 
     // The interaction is a plain (invisible) ImGui button so hover/press behavior is unchanged;
