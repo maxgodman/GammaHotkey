@@ -26,9 +26,16 @@ namespace SystemTrayManager
         HICON& cached = gammaEnabled ? s_iconOn : s_iconOff;
         if (!cached)
         {
+            // The .ico resources carry both 16x16 and 32x32 frames; LoadImage selects the frame
+            // nearest the requested size. Use the shell's small-icon metric, not the window's DPI
+            // (GetSystemMetricsForDpi(GetDpiForWindow(...))): this icon is drawn by the shell in the
+            // notification area, so the size that matters is the taskbar's, not that of whichever
+            // monitor our window is on - values that differ on a mixed-DPI setup.
+            const int iconSize = GetSystemMetrics(SM_CXSMICON);
             const UINT iconID = gammaEnabled ? IDI_ON : IDI_OFF;
             cached = (HICON)LoadImage(hInst, MAKEINTRESOURCE(iconID),
-                                      IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+                                      IMAGE_ICON, iconSize, GetSystemMetrics(SM_CYSMICON),
+                                      LR_DEFAULTCOLOR);
         }
         return cached;
     }
