@@ -420,14 +420,23 @@ void RenderModeToggleButton()
     // the custom title bar, so it stays anchored regardless of the content laid out beneath it. The
     // host window is sized to wrap the button exactly (button size plus WindowPadding on every side)
     // and positioned so the button itself lands at buttonPos.
-    const float buttonWidth = 90.0f;
-    const float buttonHeight = 28.0f;
-    const float rightMargin = 8.0f;                    // Gap from the parent window's right edge.
-    const float topMargin = 2.0f;                      // Gap below the title bar.
-    const ImVec2 windowPadding = ImVec2(4.0f, 2.0f);
+    //
+    // Every metric here is one of our own literals rather than an ImGui style value, so none of it
+    // is covered by style.ScaleAllSizes() and all of it needs the DPI factor - without it the whole
+    // cluster (button, its background window and its outline) stays at 100% size while the label
+    // inside grows with the font, and the text clips.
+    const float dpiScale = App::GetDpiScale();
+    // Wide enough for the longer of the two labels it alternates between, so the button never has
+    // to resize as the mode changes and the text cannot clip at any font size or scale.
+    const float labelWidth = ImMax(ImGui::CalcTextSize("Advanced").x, ImGui::CalcTextSize("Simple").x);
+    const float buttonWidth = ImMax(90.0f * dpiScale, labelWidth + ImGui::GetStyle().FramePadding.x * 2.0f);
+    const float buttonHeight = 28.0f * dpiScale;
+    const float rightMargin = 8.0f * dpiScale;         // Gap from the parent window's right edge.
+    const float topMargin = 2.0f * dpiScale;           // Gap below the title bar.
+    const ImVec2 windowPadding = ImVec2(4.0f * dpiScale, 2.0f * dpiScale);
 
     const ImVec2 buttonPos = ImVec2(io.DisplaySize.x - buttonWidth - rightMargin,
-                                    UIConstants::TITLEBAR_HEIGHT + topMargin);
+                                    GetTitleBarHeight() + topMargin);
 
     ImGui::SetNextWindowPos(ImVec2(buttonPos.x - windowPadding.x, buttonPos.y - windowPadding.y));
     ImGui::SetNextWindowSize(ImVec2(buttonWidth + windowPadding.x * 2.0f, buttonHeight + windowPadding.y * 2.0f));
