@@ -138,6 +138,12 @@ void RenderAboutDialog()
         ImGui::Spacing();
         ImGui::Text("%s", LoadUIString(IDS_ABOUT_COPYRIGHT).c_str());
         ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Third-party attribution.
+        ImGui::TextDisabled("%s", LoadUIString(IDS_ABOUT_THIRDPARTY).c_str());
+        ImGui::Spacing();
 
         const float buttonWidth = 120.0f;
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - buttonWidth) * 0.5f);

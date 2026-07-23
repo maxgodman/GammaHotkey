@@ -124,6 +124,13 @@ Settings are stored in `{ExecutableName}.ini` in the same folder as the executab
 - **DirectX 11** - included with Windows SDK
 - **Windows API** - shell32.lib, ole32.lib
 
+### Third-party notices
+
+- **Dear ImGui** © Omar Cornut — MIT License, see `external/imgui/LICENSE.txt`.
+- **Cascadia Mono** © Microsoft — SIL Open Font License 1.1, see
+  `resources/fonts/LICENSE-CascadiaMono.txt`. The font is embedded in the executable as the UI
+  typeface; see [FONT.md](FONT.md).
+
 ## 🐛 Troubleshooting
 
 ### "Gamma adjustments aren't working"
