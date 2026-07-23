@@ -76,8 +76,13 @@ namespace ProfileManager
         // Update selected profile index if needed.
         if (App::selectedProfileIndex == index)
         {
+            // The active profile is gone: drop the selection back to defaults and re-sync the
+            // display so its ramp no longer reflects the deleted profile. workingProfile is now at
+            // identity values, so this restores an un-adjusted screen (honoring the current
+            // enabled/disabled state) instead of leaving the stale ramp applied until the next toggle.
             App::workingProfile = Profile();
             App::selectedProfileIndex = -1;
+            App::SyncGammaToState();
         }
         else if (App::selectedProfileIndex > index)
         {
