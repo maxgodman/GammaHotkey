@@ -38,7 +38,11 @@ First complete release, overhauling several systems from the beta releases, and 
 - **System tray operation**: idles in the background from the tray, with options to run in
   the background when closed, run in the background when launched, toggle adjustments on at
   launch, and launch on Windows startup. Exiting reverts gamma to default.
-- **Per-monitor DPI awareness (V2)**, for a crisp UI across mixed-DPI setups.
+- **Per-monitor DPI awareness (V2)**, for a crisp UI across mixed-DPI setups. The window, title
+  bar, caption buttons and every widget scale to the monitor they are shown on, and the tray icon
+  matches the shell's icon size.
+- **Embedded UI font (Cascadia Mono)**, giving the same typeface on every machine and a consistent,
+  crisp appearance at every display scale, including fractional scales such as 125% and 150%.
 
 [Unreleased]: https://github.com/maxgodman/GammaHotkey/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/maxgodman/GammaHotkey/releases/tag/v1.0.0
