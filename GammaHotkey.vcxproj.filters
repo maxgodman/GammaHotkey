@@ -99,6 +99,9 @@
     <ClInclude Include="src\managers\HotkeyManager.h">
       <Filter>src\managers</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\Font_CascadiaMono.h">
+      <Filter>src\ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\ImGui_Integration.h">
       <Filter>src\ui</Filter>
     </ClInclude>

@@ -634,6 +634,14 @@ void ApplyImGuiStyle()
     colors[ImGuiCol_TabUnfocused] = ImVec4(0.15f, 0.16f, 0.17f, 1.00f);
     colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.20f, 0.21f, 0.22f, 1.00f);
 
+    // Design size of the embedded font (see ImGui_Integration and FONT.md), before the global
+    // factors are applied - ImGui multiplies this by style.FontScaleDpi to get the rasterized
+    // size. It lives here, with the rest of the style, rather than next to the AddFont call,
+    // because ImGuiRenderer::OnDpiChanged resets the whole style (style = ImGuiStyle()) and then
+    // calls this function: setting it anywhere else would silently revert the font to ImGui's
+    // default base size after the first DPI change.
+    style.FontSizeBase = 15.0f;
+
     // Spacing and rounding.
     style.WindowRounding = 0.0f; // No rounding, the Windows window will round if desired.
     style.ChildRounding = 4.0f;

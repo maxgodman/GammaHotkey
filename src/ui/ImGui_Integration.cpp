@@ -3,6 +3,7 @@
 #include "framework.h"
 #include "ImGui_Integration.h"
 #include "AppGlobals.h"
+#include "Font_CascadiaMono.h"
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
@@ -42,8 +43,19 @@ bool ImGuiRenderer::Initialize(const HWND hwnd)
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(m_pd3dDevice, m_pd3dDeviceContext);
 
-    // Apply custom style.
+    // Apply custom style. This also sets style.FontSizeBase, the design size of the font added
+    // just below.
     ApplyImGuiStyle();
+
+    // Load the embedded UI font. ImGui's own built-in fonts are compiled out of the build
+    // (IMGUI_DISABLE_DEFAULT_FONT), which means this has to succeed or there would be no font at
+    // all - precisely why the TTF is embedded as a byte array rather than read off disk, where it
+    // could be missing. Deliberately passing neither size_pixels nor a glyph range: since ImGui
+    // 1.92 the size comes from style.FontSizeBase (so it composes correctly with FontScaleDpi
+    // below) and glyphs load on demand, with coverage decided by the subset baked into the array.
+    // See FONT.md for the whole runbook.
+    io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data,
+                                             CascadiaMono_compressed_size);
 
     // Apply DPI scaling after style, so it scales everything. App::GetDpiScale() is the shared
     // source for the factor (hwnd is already published as App::mainWindow by the time WM_CREATE
