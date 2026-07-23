@@ -91,8 +91,17 @@ namespace App
     {
         assert(App::mainWindow); // Main window must be created and ready.
 
-        const int windowWidth = App::GetDesiredWindowSizeX();
-        const int windowHeight = App::GetDesiredWindowSizeY();
+        // The desired sizes are authored at 96 DPI, and SetWindowPos takes physical pixels, so
+        // scale them here. Doing it in this one place keeps every caller consistent: the initial
+        // WM_CREATE sizing and the Simple/Advanced mode switch both come through here. It also
+        // agrees with the WM_DPICHANGED path, which resizes by Windows' suggested rect - that is
+        // the current size scaled by newDpi/oldDpi, i.e. the same constant x newScale this
+        // produces, so a mode switch straight after crossing a monitor boundary does not jump.
+        // The +0.5f rounds rather than truncates; the sizes are always positive, and fractional
+        // scales (125%, 175%) otherwise lose a pixel off the window every time.
+        const float scale = GetDpiScale();
+        const int windowWidth = (int)(App::GetDesiredWindowSizeX() * scale + 0.5f);
+        const int windowHeight = (int)(App::GetDesiredWindowSizeY() * scale + 0.5f);
 
         SetWindowPos(App::mainWindow, nullptr, 0, 0,
             windowWidth, windowHeight,

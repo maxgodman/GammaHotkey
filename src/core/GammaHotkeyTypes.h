@@ -90,6 +90,9 @@ namespace SystemTrayIDs
 namespace AppConstants
 {
     constexpr int MAX_LOADSTRING = 100;
+
+    // Default window sizes in logical (96 DPI / 100% scaling) pixels. App::SyncWindowSizeToState
+    // multiplies them by App::GetDpiScale() before handing them to SetWindowPos.
     constexpr int DEFAULT_SIMPLE_WINDOWSIZE_X = 450;
     constexpr int DEFAULT_SIMPLE_WINDOWSIZE_Y = 520;
     constexpr int DEFAULT_ADVANCED_WINDOWSIZE_X = 900;

@@ -76,17 +76,19 @@ namespace App
     float GetDpiScale();
 
     /**
-     * @brief Gets the desired window size X (width) of the app.
+     * @brief Gets the desired window size X (width) of the app, in logical (96 DPI) pixels.
+     *        SyncWindowSizeToState applies GetDpiScale() to it.
      */
     int GetDesiredWindowSizeX();
 
     /**
-     * @brief Gets the desired window size Y (height) of the app.
+     * @brief Gets the desired window size Y (height) of the app, in logical (96 DPI) pixels.
+     *        SyncWindowSizeToState applies GetDpiScale() to it.
      */
     int GetDesiredWindowSizeY();
 
     /**
-     * @brief Syncs the window size to the current state of the app.
+     * @brief Syncs the window size to the current state of the app, DPI-scaled.
      */
     void SyncWindowSizeToState();
 
