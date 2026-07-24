@@ -2,14 +2,14 @@
 
 // GENERATED FILE - DO NOT HAND-EDIT.
 //
-// Cascadia Mono, Regular (static instance), subset to U+0020-00FF and stb-compressed for
-// embedding. The font itself is (c) Microsoft, licensed SIL OFL 1.1 - see
-// resources/fonts/LICENSE-CascadiaMono.txt.
+// Cascadia Mono Regular (static instance), Version 2407.024, subset to U+0020-00FF and
+// stb-compressed for embedding.
 //
-// Regenerate with (see FONT.md for the full runbook):
-//   pyftsubset resources\fonts\CascadiaMono-Regular.ttf --unicodes=U+0020-00FF ^
-//              --output-file=resources\fonts\CascadiaMono-Subset.ttf
-//   binary_to_compressed_c.exe resources\fonts\CascadiaMono-Subset.ttf CascadiaMono > src\ui\Font_CascadiaMono.h
+// Third-party font: see resources/fonts/LICENSE-CascadiaMono.txt for its licence, and FONT.md
+// for the obligations that come with shipping it.
+//
+// Regenerate with:
+//   powershell -NoProfile -File scripts/regenerate-font.ps1
 //
 // The array is owned by this translation unit, not by the font atlas:
 // AddFontFromMemoryCompressedTTF() does not take ownership of compressed data, so `static const`
@@ -17,8 +17,8 @@
 
 #pragma once
 
-// File: 'resources\fonts\CascadiaMono-Subset.ttf' (31368 bytes)
-// Exported using binary_to_compressed_c.exe -u8 "resources\fonts\CascadiaMono-Subset.ttf" CascadiaMono
+// File: 'CascadiaMono-Subset.ttf' (31368 bytes)
+// Exported using binary_to_compressed_c.exe -u8 "CascadiaMono-Subset.ttf" CascadiaMono
 static const unsigned int CascadiaMono_compressed_size = 23400;
 static const unsigned char CascadiaMono_compressed_data[23400] =
 {
